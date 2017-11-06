@@ -1,0 +1,43 @@
+# Basic
+process: 1
+order: 2
+pdf_flag: 82
+CM_energy: 14000.
+verbosity: 1 !Amount of output text
+ih1 1 ! hadron type for beam1 (1=proton  -1=antiproton)
+ih2 1 ! hadron type for beam2 (1=proton  -1=antiproton)
+save_events: 1
+workdir: NNLO_test1/
+# Scales
+mu_S: 1. ! resummation scale (GeV)
+mu_R: 1. ! renormisation scale (GeV)
+muR_flag: 1
+mu_F: 113. ! factorisation scale (GeV)
+muF_flag: 0
+# Integration
+maxeval: 50000 ! Approximate max number of integral iterations
+nstart: 1000 ! Number of integral iterations in first evaluation
+nincrease: 1000 ! Number of extra integral iterations in each further evaluation
+integrator_flag: 2 !1=default, 2=cuba
+multi_machine: 0
+seed: 0
+# Resummation
+#pdf_fussiness=0.5
+#en_sec_multiplier=2
+gqnp: 2.666666667
+ggnp: 6.0
+QQ_Min: 80.
+QQ_Max: 160.
+QT_Min: 0.
+QT_Max: 120.
+eta_Min: -2.5
+eta_Max: 2.5
+# Diphoton
+boxflag: 0 ! whether to include the gg->gamma gamma Box (0 = no, 1 = yes, 2 = Box only)
+etaCut: 2.5
+crack1: 1.37 ! etacut crack1
+crack2: 1.37 ! etacut crack2
+pT1cut: 40 !
+pT2cut: 25 !
+Rcut: 0.4 ! Rcut
+

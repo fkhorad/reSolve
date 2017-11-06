@@ -1,0 +1,43 @@
+# Basic
+process: 1 !1 = diphoton
+order: 2 !NNLO + NNLL
+pdf_flag: 82
+CM_energy: 8000.
+verbosity: 1 !Amount of output text, leave set to 1
+ih1 1 ! hadron type for beam1 (1=proton  -1=antiproton)
+ih2 1 ! hadron type for beam2 (1=proton  -1=antiproton)
+save_events: 1
+workdir: Atlas_A/
+# Scales
+mu_S: 1. ! resummation scale (GeV)
+mu_R: 1. ! renormisation scale (GeV)
+muR_flag: 1
+mu_F: 1. ! factorisation scale (GeV)
+muF_flag: 1
+# Integration
+maxeval: 2000000 ! Approximate max number of integral iterations
+nstart: 10000 ! Number of integral iterations in first evaluation
+nincrease: 10000 ! Number of extra integral iterations in each further evaluation
+integrator_flag: 2 !1=default, 2=cuba
+multi_machine: 0
+seed: 0
+# Resummation
+#pdf_fussiness=0.5
+#en_sec_multiplier=2
+gqnp: 2.666666667
+ggnp: 6.0
+QQ_Min: 0.
+QQ_Max: 500.
+QT_Min: 0.
+QT_Max: 150.
+eta_Min: -2.37
+eta_Max: 2.37
+# Diphoton
+boxflag: 1 ! whether to include the gg->gamma gamma Box (0 = no, 1 = yes, 2 = Box only)
+etaCut: 2.37
+crack1: 1.37 ! etacut crack1
+crack2: 1.56 ! etacut crack2
+pT1cut: 40 !
+pT2cut: 30 !
+Rcut: 0.4 ! Rcut
+

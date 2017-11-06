@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Version 0.2 without wakeup
+
+echo "ssh parallel k_vegas launcher"
+
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 machine_name input_file"
+  echo "(use relative path starting from executable dir)"
+  exit 1
+fi
+
+machines="$1"
+infile="$2"
+
+# Fixed parameters
+maindir="Francesco/reSolve"
+exe="./resu.out"
+
+
+# Actual script start
+for iter in {1..20} ; do
+
+echo "Iteration $iter"
+
+# Machines loop
+  PIDS=""
+  for pc in $machines ; do
+    echo $pc
+# Cores loop
+    for ii in {1..4} ; do
+      echo $ii
+      nohup ssh $pc "cd ${maindir}; ${exe} ${infile} ${pc:0:5}_$ii" > nohup_${pc:0:5}_${ii}_${iter}.txt 2>/dev/null &
+      PIDS="$PIDS $!"
+    done
+
+  done
+
+  wait $PIDS
+
+  echo "Ending iteration"
+
+  nohup ${exe} ${infile} END_ITER > nohup_final.txt 2>/dev/null &
+  LASTPID=$!
+  wait $LASTPID
+
+  echo "Iteration over"
+  echo
+
+done
+
+echo "That should be it"
+
+exit 0
