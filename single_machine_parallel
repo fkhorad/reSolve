@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Single-machine parallel launcher for reSolve using k_vegas 
+version=0.2.2
+
+##### HARDCODED INPUTS #####
+max_iter=10
+max_cores=4
+EXE="./reSolve.out"
+##### END HARDCODED INPUTS #####
+echo
+echo "##########################################################################"
+echo "Single-machine parallel launcher for reSolve + k_vegas -- version $version"
+echo "Execution can be regulated by several parameter -- edit the script to see"
+echo "##########################################################################"
+echo
+
+if [ $# -eq 0 ] ; then
+  echo "Usage: $0 INPUT FILE (with full path)"
+  exit
+fi
+infile=$1
+if [ $# -gt 1 ] ; then
+  echo "WARNING - the script only accepts one command argument, a reSolve input file. Parameters beyond the first are being ignored."
+fi
+
+
+echo "Requested iterations: $max_iter"
+echo
+iter=1
+while [ $iter -le $max_iter ] ; do
+
+echo "Iteration $iter"
+
+  PIDS=""
+  loc_cores=`nproc --all 2>/dev/null`
+  cores=$(( loc_cores > max_cores ? max_cores : loc_cores ))
+  echo "Launching process on $cores cores"
+# Cores loop
+    ii=1
+    while [ $ii -le $cores ] ; do
+#      echo $ii
+      tag=${hostname}_$ii
+#      echo $tag
+      nohup $EXE ${infile} $tag >nohup_$tag.out 2>/dev/null &
+      PIDS="$PIDS $!"
+      ii=$(( ii+1 ))
+    done
+
+  echo "Waiting for child processes..."
+  wait $PIDS
+
+  echo "Finalising iteration"
+#
+  nohup $EXE ${infile} END_ITER >nohup_iter_${iter}.out 2>/dev/null &
+  LASTPID=$!
+  wait $LASTPID
+#
+  iter=$(( iter+1 ))
+  echo "Iteration over"
+  echo
+
+done
+
+echo "That should be it"
+
+exit

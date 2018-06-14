@@ -25,12 +25,9 @@ void partons_cc_(double& sq2, double& sx,
 
       fx0 = pdf_tofit->cont.glu/sx;
 //
-//      fxm5 = pdf_tofit->cont.bbar/sx;
-//      fxm4 = pdf_tofit->cont.cbar/sx;
-//      fxm3 = pdf_tofit->cont.sbar/sx;
-      fxm5 = pdf_tofit->cont.bot/sx;
-      fxm4 = pdf_tofit->cont.chm/sx;
-      fxm3 = pdf_tofit->cont.str/sx;
+      fxm5 = pdf_tofit->cont.bbar/sx;
+      fxm4 = pdf_tofit->cont.cbar/sx;
+      fxm3 = pdf_tofit->cont.sbar/sx;
       fxm2 = pdf_tofit->cont.dsea/sx;
       fxm1 = pdf_tofit->cont.usea/sx;
 //

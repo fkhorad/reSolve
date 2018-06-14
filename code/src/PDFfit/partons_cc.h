@@ -9,7 +9,7 @@
 
 extern "C" {
 
-  void fiteador_(double& xtauf, double& muf2, int& energy_sector, int& pdf_label);
+  void fiteador_(double& xtauf, double& muf2, int& energy_sector, int& pdf_label, int& aa_in);
 
   void writepdfout_(const char* filename, double& xx, double& muf, int& energy_sector,
                     int& pdf_label);

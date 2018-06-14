@@ -44,7 +44,9 @@ void read_data(std::map<std::string, int>& input_status,
     std::stringstream linestream;
     std::size_t pos;
 
-    pos = line.find(tag);
+    std::stringstream tagP;
+    tagP << tag << ":";
+    pos = line.find(tagP.str());
     if(pos!=std::string::npos){
       linestream << line.substr(pos + tag.length() + 1);
       linestream >> value;
@@ -71,5 +73,11 @@ void set_def( std::map<std::string, const type>& defaults,
 
 }
 
+
+// Auxiliary function:
+// dumps the values of any parameters which still have their default values at the end
+// of reading. If any par has status '-1' - which means that the code attempted to read it,
+// but found no value, either default or user-defined - exit with an error.
+void dump_default_parameters(std::map<std::string, int> input_status, std::map<std::string, const int> default_ints, std::map<std::string, const double> default_reals, std::map<std::string, const std::string> default_strings);
 
 #endif

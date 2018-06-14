@@ -4,21 +4,11 @@
 #include <complex>
 #include <vector>
 
-class ResummationInfo;
+struct ResummationInfo;
 class resummationIndepfns;
+struct resu_PS;
 
 #include "mellinspace_fns.h"
-
-
-class PSdep_variables {
- public:
-  double q2, qt2, eta, mur2, muf2,
-    mures2, a, b0p, x, alphas, alphaqf;
-  int ifit, ifit2;
-  std::complex<double> H1q, H1g, H2g;
-  std::complex<double> H2q[5];
-  double sigmaij[11][11];
-};
 
 
 class AllDep_N {
@@ -31,19 +21,11 @@ void preent();
 
 };
 
-void GetResuPars (int i, int isign, int ibeam, ResummationInfo* resuminfo,
-                  PSdep_variables* resu, std::complex<double> alpq,
-                  AllDep_N& ParamsforResu);
+void GetResuPars (int i, int isign, int ibeam, ResummationInfo* resuminfo, resu_PS* resu, std::complex<double> alpq, AllDep_N& ParamsforResu);
 
 
 //Calculates Hard functions for inverse mellin transform argument
-void Hardfns_calc (int order,
-                   PSdep_variables* resu, resummationIndepfns* indep,
-                   AllDep_N PR1, AllDep_N PR2, resuDep_N N1, resuDep_N N2,
-                   std::complex<double> alpq,
-                   std::complex<double> aexp, std::complex<double> aexpb,
-                   std::complex<double> sudakq, std::complex<double> sudakg,
-                   std::complex<double>& HCRNqq, std::complex<double>& HCRNgg);
+void Hardfns_calc (int qq_order, int gg_order, int pcF, int em_charge, resu_PS* resu, resummationIndepfns* indep, AllDep_N PR1, AllDep_N PR2, resuDep_N N1, resuDep_N N2, std::complex<double> alpq, std::complex<double> aexp, std::complex<double> aexpb, std::complex<double> sudakq, std::complex<double> sudakg, std::complex<double>& HCRNqq, std::complex<double>& HCRNgg);
 
 
 

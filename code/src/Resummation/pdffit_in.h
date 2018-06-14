@@ -33,7 +33,5 @@ class fitparams {
   double qmin, double qmax, double mu_F, int muF_flag);
 };
 
-//void fitcalc(InputPars*, fitparams, double eta, double q2, int& ifit, int& ifit2);
-
 
 #endif

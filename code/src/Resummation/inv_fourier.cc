@@ -5,12 +5,16 @@
 #include <iostream>
 #include <ctime>
 
+#include "resummation_input.h"
 #include "resu_preproc.h"
 #include "intde2.h"
 #include "inv_mellin.h"
-#include "hardfns.h"
+#include "resu_PS.h"
 #include "xsection.h"
 
+
+#include <fstream>
+#include <iomanip>
 
 extern int k_count, k_count0, k_count00;
 
@@ -21,77 +25,56 @@ namespace global_fitpars{
 
 int k_count, k_count0 = 0;
 
-double resummed(PSdep_variables& resuvars, ResummationInfo* resuminfo) {
+double resummed(resu_PS& resuvars, ResummationInfo* resuminfo) {
 
+//   k_count0++;
 
-   k_count0++;
-
-// Get fit sectors information
-   if(resuminfo->process!=-1) {
-       fitcalc(resuvars, resuminfo);
-   }
-
-
-// This whole block purpose is NOT to get the hadronic cross-section (this
-// is part of what invbtoqt below does), but to get the PDF fit error estimate/
-// correction factor xnormal, which is the ratio LO cross-section calculated
-// with standard PDFs (xsection) and fitted PDFs (xsection2).
-    double xborn, xborn2, xnormal;
+    double xborn, resummedval, xnorm;
 
     xborn = xsection(resuvars, resuminfo);
 
-    if (resuminfo->process != -1) {
-	xborn2 = xsection2(resuvars, resuminfo);
-
-	xnormal = xborn/xborn2; //Extra normalization which should compensate for small errors in the fit
-    }
-
-// DO WE REALLY WANT TO KEEP THIS?
-    if (xnormal> 1.15 || xnormal < 0.85) {
-      xnormal = 1.0; //Avoid problems at extreme kinematics (and possible divisions by 0!)
-    }
-// Up to here
-
-
-
-
 // Extra normalization for dsigma/dqT + flux factor
-// SHOULD REALLY be put together jacob, randsjacob
-    double xnorm = resuvars.x/std::pow(resuvars.q2,2);
-    double resummedval = 0.0;
+    xnorm = resuvars.x/resuvars.q2;
 
-    // std::cout << "process = " << resuminfo->process << std::endl;
+    if (resuminfo->resum_flag !=0){
+// Get fit sectors information
+      fitcalc(resuvars, resuminfo);
+//
+//Extra normalization which helps compensate for small errors in the fit
+      double xborn2, xnormal;
+      xborn2 = xsection2(resuvars, resuminfo);
+      xnormal = xborn/xborn2;
+      if (xnormal> 1.15 || xnormal < 0.85) {
+        xnormal = 1.0; //Avoid problems at extreme kinematics (and possibly divisions by 0!)
+      }
 
-    if (resuminfo->process == 1)
-	{
 // Main thing:
-	double resuv = invbtoqt(resuvars, resuminfo);
+      double resuv = invbtoqt(resuvars, resuminfo);
+      resummedval = xnorm*xnormal*resuv;
+      // std::cout << "resuv = " << resuv << std::endl;
+      // std::cout << "xnorm = " << xnorm << std::endl;
+      // std::cout << "xnormal = " << xnormal << std::endl;
 
-	
-// Final result:
-	
-	resummedval = xnorm*xnormal*resuv;
-	}
-
-    else if (resuminfo->process == -1) //Born only option for testing
-	{
-	    resummedval = xnorm*xborn;
-	}
+/*
+      double temp = 64000./3.*resuv*3.141592653589793;
+      std::ofstream debborah;
+      debborah.open("debborah.dat", std::ios_base::app);
+      debborah << std::setprecision(17) << temp << "\n";
+      debborah << "----------\n\n";
+      debborah.close();
+*/
 
 
-// DEBUG
-    // std::cout << "Main counters:  " << k_count0 << "  " << k_count00 << std::endl;
-    // std::cout << "xborn  " << xborn << std::endl;
-    // std::cout << "xborn2  " << xborn2 << std::endl;
-    // std::cout << "resuv  " << resuv << std::endl << std::endl << std::endl;
+    }
 
+    else resummedval = xnorm*xborn;
 
     return resummedval;
 }
 
 
 
-double invbtoqt(PSdep_variables& resuvars, ResummationInfo* resuminfo){
+double invbtoqt(resu_PS& resuvars, ResummationInfo* resuminfo){
 
   double qt = std::pow(resuvars.qt2,0.5);
   double errt = 0.0;
@@ -106,7 +89,7 @@ double invbtoqt(PSdep_variables& resuvars, ResummationInfo* resuminfo){
     k_count = 0;
 
     intdeo(invres,0.0,qt,resuminfo->aw,&resum,&errt, &userdata);
-    
+
 // DEBUG
     // std::cout << "# of invres evaluations:  " << k_count << std::endl;
   }
@@ -128,13 +111,15 @@ double invres (double b, void* userdata){
 
     invresval = inversemellin_resummed(bb, data->resuvars, data->resuminfo);
 
+    // std::cout << "b = " << b << " invresval = " << invresval << std::endl;
+
     return invresval;
 }
 
 
 
 
-void fitcalc(PSdep_variables& resuvars, ResummationInfo* resuminfo){
+void fitcalc(resu_PS& resuvars, ResummationInfo* resuminfo){
 
     int verbosity = resuminfo->verbosity;
     double eta = resuvars.eta;
@@ -156,7 +141,7 @@ void fitcalc(PSdep_variables& resuvars, ResummationInfo* resuminfo){
     else if (eta < 4.50001) { IFIT = 5;}
     else if (eta < 5.0001) { IFIT = 6;}
     else {
-      std::cout << "WARNING: very large eta: " << eta << std::endl;
+//      std::cout << "WARNING: very large eta: " << eta << std::endl;
       IFIT = 6;
     }
 
@@ -179,10 +164,10 @@ void fitcalc(PSdep_variables& resuvars, ResummationInfo* resuminfo){
       }
     }
 
-    if (verbosity >= 12) {
+     if (verbosity >= 12) {
         std::cout << "IFIT = " << IFIT << std::endl;
         std::cout << "IFIT2 = " << IFIT2 << std::endl;
-    }
+     }
 
     resuvars.ifit = IFIT;
     resuvars.ifit2 = IFIT2;

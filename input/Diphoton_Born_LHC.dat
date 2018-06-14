@@ -1,0 +1,45 @@
+# Basic
+process: 1
+resum_flag: 0
+order: 0
+pdf_flag: 80
+CM_energy: 14000.
+verbosity: 1 !Amount of output text
+ih1 1 ! hadron type for beam1 (1=proton  -1=antiproton)
+ih2 1 ! hadron type for beam2 (1=proton  -1=antiproton)
+save_events: 2
+workdir: Diphoton_Born_LHC/
+statefile: resume.dat
+# Scales
+mu_R: 1. ! renormisation scale (GeV)
+mu_S: 1. ! resummation scale (GeV)
+muR_flag: 1
+mu_F: 1. ! factorisation scale (GeV)
+muF_flag: 1
+# Integration
+maxeval: 100000 ! Approximate max number of integral iterations
+nstart: 10000 ! Number of integral iterations in first evaluation
+nincrease: 10000 ! Number of extra integral iterations in each further evaluation
+integrator_flag: 1 !1=default, 2=cuba
+multi_machine: 0
+seed: 0
+# Resummation
+boxflag: 0
+gqnp: 0.
+ggnp: 0.
+QQ_Min: 20.
+QQ_Max: 250.
+QT_Min: 0.
+QT_Max: 200.
+eta_Min: -2.5
+eta_Max: 2.5
+# DrellYan
+crack1: 1.37 ! etacut crack1 general cut
+crack2: 1.37 ! etacut crack2 general cut 
+pT1cut: 40. ! general cut
+pT2cut: 25. ! general cut
+etaCut: 2.5 !
+Rcut: 0.4
+# Histograms
+histo: qq 50 20. 250.
+histo: eta 50 -2.5 2.5

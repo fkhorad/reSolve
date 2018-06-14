@@ -7,11 +7,7 @@
 // the idea here is to keep everything as simple as possible: I would prefer to avoid
 // linking any "big" libraries unless it is strictly necessary.
 
-// IN PARTICULAR: I use std::vector<double> for 4-momenta, aliased as "four_momentum"
-// to allow easier replacing in the future. There is no "4-momentum class"
-// just a (small) bunch of functions which operate on 4-dimensional vectors.
-
-// The space-time dimension is HARDCODED for now
+// IN PARTICULAR: I use std::vector<double> for 4-momenta, aliased as "four_momentum" to allow easier replacing in the future. There is no "4-momentum class"
 
 double LorDot(const four_momentum& mom1, const four_momentum& mom2){
 
@@ -32,8 +28,7 @@ four_momentum LorDot(const std::vector<four_momentum>& MM, const four_momentum& 
   }
   return res;
 };
-std::vector<four_momentum> LorDot(const std::vector<four_momentum>& M1,
-                                          const std::vector<four_momentum>& M2){
+std::vector<four_momentum> LorDot(const std::vector<four_momentum>& M1, const std::vector<four_momentum>& M2){
   std::vector<four_momentum> res(4, four_momentum(4, 0.) );
   for(int i=0; i<4; i++){
     for(int j=0; j<4; j++){
@@ -70,12 +65,12 @@ std::complex<double> SpinProdA(const four_momentum& mom1, const four_momentum& m
   double prod = mom1P*mom2P;
 
   if( prod == 0.){
-    res = std::complex<double>(sqrt(2.*std::abs(LorDot(mom1,mom2))), 0.);
+    res = std::complex<double>(std::sqrt(2.*std::abs(LorDot(mom1,mom2))), 0.);
     if(mom1P<0.) res*=-1.;
     if(mom2P>0.) res*=-1.;
   }
   else{
-    double fac = 1./sqrt(std::abs(prod));
+    double fac = 1./std::sqrt(std::abs(prod));
     double res_R = fac*(mom1[1]*mom2P - mom2[1]*mom1P);
     double res_I = fac*(mom1[2]*mom2P - mom2[2]*mom1P);
     res = std::complex<double>(res_R, res_I);
@@ -102,7 +97,7 @@ std::vector<four_momentum> SetBoost(const four_momentum& pp, bool invert){
 
   double beta2, denom, gamma;
   beta2 = beta[0]*beta[0] + beta[1]*beta[1] + beta[2]*beta[2];
-  gamma = 1/sqrt(1-beta2);
+  gamma = 1/std::sqrt(1-beta2);
   denom = beta2;
   if(denom==0.) denom = 1.;
 

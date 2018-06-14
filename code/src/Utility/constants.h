@@ -1,6 +1,8 @@
 #ifndef _constantsH_
 #define _constantsH_
 
+#include <cmath>
+#include <iostream>
 
 // An effort has been made to avoid the use global variables/constants in the code except where absolutely necessary. Collected here are those few numerical values that should have no business being changed at input file level.
 
@@ -14,10 +16,12 @@ const double zeta4= 1.082323233711138;
 const double Eulerconst = 0.57721566490153;
 const double pi = 3.141592653589793238462643383279503;
 
+const double pi2_6 = 1.64493406684822643646; // pi^2 / 6
+
 // Parameters for PDF fit -- no point in changing them with current fit code
 const int nfitpars = 8;
 const int nfitmax = 14;
-const double aa = 2.5;
+const double aa = 3;
 const int max_fit_files = 100;
 
 // Parameter for inverse Mellin transform -- no point in changing it with current Mellin integration code
@@ -57,8 +61,6 @@ const double Qd4 = 0.01234567901234567901;
 const double Tr = 0.5;
 const double sumQq2 = 1.2222222222222222222;
 */
-
-const double gf=1.16639e-5; // To input
 
 }
 

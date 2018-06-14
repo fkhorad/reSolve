@@ -8,12 +8,11 @@
 
 #include "constants.h"
 
-#include "resu_preproc.h"
-#include "mellinspace_fns.h"
+#include "resummation_input.h"
 #include "sudakov.h"
 #include "hardfns.h"
+#include "resu_PS.h"
 #include "evolution.h"
-
 
 
 //DEBUG
@@ -25,8 +24,7 @@ extern std::chrono::high_resolution_clock::time_point start, end_;
 std::chrono::high_resolution_clock::time_point start, end_;
 
 
-double inversemellin_resummed(std::complex<double> b,
-                              PSdep_variables* resu, ResummationInfo* resuminfo) {
+double inversemellin_resummed(std::complex<double> b, resu_PS* resu, ResummationInfo* resuminfo) {
 
 
 //DEBUG
@@ -62,13 +60,14 @@ double inversemellin_resummed(std::complex<double> b,
     ih1 = resuminfo->ih1;
     ih2 = resuminfo->ih2;
     int order = resuminfo->order;
+    int gg_order = resuminfo->gg_order;
+    int qq_order = resuminfo->qq_order;
     double ggnp = resuminfo->ggnp;
     double gqnp = resuminfo->gqnp;
     int ifit = resu->ifit;
     int ifit2 = resu->ifit2;
     double Ax = std::log(x);
     resummationIndepfns* resuNindep = &resuminfo->resuNindep;
-
 
     if (resuminfo->verbosity >= 16) {
       std::cout << "inv_mellin.cc" << std::endl;
@@ -81,10 +80,8 @@ double inversemellin_resummed(std::complex<double> b,
     bstar=b/std::pow(1.0+(b*b)/(blim*blim),0.5); //resolves singularities at large b
     blog = std::log(q2*bstar*bstar/(b0p*b0p)+1.0); //modified sudakov resolves singularities at small b
 
-// scale2 = std::complex<double>(b0p*b0p/(b.real()*b.real()),0.0);
 //Use bstar instead to avoid issues of evolution over large scale differences in alphasl -> FX1/2 matrices -> Hardfns_calc, bstar is same as b for small and medium b but cutsoff at blim for large b (essentially a small qT cutoff)
     std::complex<double> scale2 = std::complex<double>(b0p*b0p/(bstar.real()*bstar.real()),0.0);
-
 
 // SUDAKOV
     std::complex<double> sudakq, sudakg;
@@ -92,7 +89,6 @@ double inversemellin_resummed(std::complex<double> b,
                 resuminfo->verbosity);
     sudakg = Sc(b, q2, b0p, alphas, mur2, a, resuNindep, order, gqnp, ggnp, 'g',
                 resuminfo->verbosity);
-
 
 // Use Bessel function as integrand is only dependent on b magnitude, not direction
 // Must use actual b here as is part of measure for inverse fourier transform
@@ -173,6 +169,7 @@ double inversemellin_resummed(std::complex<double> b,
       xn1neg = xn1neg + OneComplex;
 
       GetResuPars(i1, 1, 1, resuminfo, resu, alpq, ParamsforResu1);
+      // std::cout << "alpq = " << alpq << std::endl;
       P1[i1] = ParamsforResu1;
     }
 
@@ -225,8 +222,13 @@ if((k_count0==407||k_count0==408) && k_count==2 && k_count2==10){
     time_span = std::chrono::duration_cast<std::chrono::duration<double> >(end_ - start);
 //    std::cout<<"invres pre-hardfns chkpoint: "<< time_span.count() <<'\n';
 }
-        Hardfns_calc (resuminfo->order, resu, resuNindep, P1[i1], P2p[i2], resuminfo->PosBranch[i1], resuminfo->PosBranch[i2], alpq, aexp, aexpb, sudakq, sudakg, hcrnqq, hcrngg);
 
+ // std::cout << "resuminfo->pcF = " << resuminfo->pcF << std::endl;
+ // std::cout << "resuminfo->tot_em_charge = " << resuminfo->tot_em_charge << std::endl;
+
+Hardfns_calc (qq_order, gg_order, resuminfo->pcF, resuminfo->tot_em_charge, resu, resuNindep, P1[i1], P2p[i2], resuminfo->PosBranch[i1], resuminfo->PosBranch[i2], alpq, aexp, aexpb, sudakq, sudakg, hcrnqq, hcrngg);
+
+// std::cout << "hcrnqq/sudakq = " << hcrnqq/sudakq << std::endl;
 
 if((k_count0==407||k_count0==408) && k_count==2 && k_count2==10){
     end_ = std::chrono::high_resolution_clock::now();
@@ -238,6 +240,10 @@ if((k_count0==407||k_count0==408) && k_count==2 && k_count2==10){
 // The hcrnqq and hcrngg out then are actually hcrnqq*sudakq and hcrngg*sudakg to avoid issues when hard factors become very large at same time as sudakovs become very small or vice versa
         std::complex<double> int1 = (hcrnqq + hcrngg)
           *cex1pos[i1]*cex2pos[i2]*contours->weights[i1]*contours->weights[i2]*factorfin;
+	// std::cout << "hcrnqq = " << hcrnqq << " hcrngg = " << hcrngg << std::endl;
+	// std::cout << "cex1pos[i1] = " << cex1pos[i1] << " cex2pos[i2] = " << cex2pos[i2]  << std::endl;
+	// std::cout << "contours->weights[i1] = " << contours->weights[i1] << " contours->weights[i2] = " << contours->weights[i2]  << std::endl;
+	
 
 
 // Negative branch contribution
@@ -248,7 +254,7 @@ if((k_count0==407||k_count0==408) && k_count==2 && k_count2==10){
 
 
 // Note: sudakovs passed so they combine with hardfactors at this stage, the hcrnqq and hcrngg out then are actually hcrnqq*sudakq and hcrngg*sudakg to avoid issues when hard factors become very large at same time as sudakovs become very small or vice versa
-       Hardfns_calc (resuminfo->order, resu, resuNindep, P1[i1], P2n[i2], resuminfo->PosBranch[i1], resuminfo->NegBranch[i2], alpq, aexp, aexpb, sudakq, sudakg, hcrnqq, hcrngg);
+       Hardfns_calc (qq_order, gg_order, resuminfo->pcF, resuminfo->tot_em_charge, resu, resuNindep, P1[i1], P2n[i2], resuminfo->PosBranch[i1], resuminfo->NegBranch[i2], alpq, aexp, aexpb, sudakq, sudakg, hcrnqq, hcrngg);
 
 
 //The hcrnqq and hcrngg out then are actually hcrnqq*sudakq and hcrngg*sudakg to avoid issues when hard factors become very large at same time as sudakovs become very small or vice versa
@@ -257,8 +263,14 @@ if((k_count0==407||k_count0==408) && k_count==2 && k_count2==10){
 
 //old code used dble in fortran to take real part here I think.....
        fz = -0.5*(int1.real()-int2.real());
+       // std::cout << "int1.real() = " << int1.real() << std::endl;
+       // std::cout << "int2.real() = " << int2.real() << std::endl;
+
 
        fun = fun + fz;
+       // std::cout << "fz = " << fz << std::endl;
+       // std::cout << "fun = " << fun << std::endl;
+
 
        if(i1==nmax1/4 && i2==nmax2/4){
          end_ = std::chrono::high_resolution_clock::now();
@@ -283,18 +295,18 @@ if((k_count0==407||k_count0==408) && k_count==2 && k_count2==10){
 
     invres = fun*xnormal;
 
+    // std::cout << "invres = " << invres << std::endl;
+    // std::cout << "fun = " << fun << std::endl;
+    // std::cout << "xnormal = " << xnormal << std::endl;
+
 
     end_ = std::chrono::high_resolution_clock::now();
     time_span = std::chrono::duration_cast<std::chrono::duration<double> >(end_ - start);
-//    std::cout<<"invres final chkpoint: "<< time_span.count() <<'\n';
-//    std::cout << aexp << std::endl;
-//    std::cout << aexpb << std::endl;
-//    std::cout << sudakg << std::endl;
-//    std::cout << sudakq << std::endl;
-    if(time_span.count()>0.1){
-      std::cout << "WARNING!  " << time_span.count() << std::endl;
-      invres = 0.;
-    }
+
+//     if(time_span.count()>0.2){
+// //      std::cout << "WARNING!  " << time_span.count() << std::endl;
+//       invres = 0.;
+//     }
 
 
     return invres;

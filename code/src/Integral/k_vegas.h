@@ -17,8 +17,7 @@
 #define def_grid_dim 50
 
 
-typedef int (*k_integrand_t)(int ndim, const double x[],
-			     double& f, void *userdata, double weight, int iter);
+typedef int (*k_integrand_t)(int ndim, const double x[], double& f, void *userdata, double weight, int iter);
 
 typedef std::vector<std::vector<double> > grid_t;
 
@@ -33,6 +32,7 @@ private:
   grid_t grid, dd, di;
 
   double si,si2,swgt,schi;
+  double pre_si, pre_si2, pre_swgt, pre_schi;
   double last_ti, last_tsi, last_sdi;
 
 public:
@@ -50,11 +50,11 @@ public:
   void set_alpha(double);
   void copy(vegas_integral&);
   int copy_from_file(std::istream & infile);
-  
+
   void combine_partial_iters(int nparts, vegas_integral* iter_parts);
 
   int niter;
-  
+
 // read only
   int r_dim();
   int r_gdim();
@@ -66,8 +66,8 @@ public:
   int r_neval();
   int r_iter();
   void info_dump(std::ostream & out1 = std::cout);
-  
-  
+
+
 };
 
 

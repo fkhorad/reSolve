@@ -6,12 +6,13 @@
 #include <fstream>
 
 #include "read_data.h"
+#include "events_out.h"
+#include "resummation_input.h"
 
+struct diphoton_input{
 
-//class diphoton_input : public user_input{
-class diphoton_input{
-
-public:
+  ResummationInfo res_1;
+  event_dumper_info event_info;
 
 // Generic diphoton cuts
   double pT1cut, pT2cut;
@@ -23,24 +24,13 @@ public:
   int boxflag; //include  gg -> yy box (0 = no, 1 = yes, 2 = box only
 
 // General info
-  double gevm2topb;
-  double M_p;
-  double CM_energy;
-  double alpha_QED;
-  std::string filename;
-  std::string workdir;
-  std::string machine_tag;
-  int verbosity;
-  int Nf, Nc;
-  
-  int integrator_flag, save_events;
+  int ndim;
 
 };
 
 
-void ReadInput_diphoton(diphoton_input*,
-                        std::map<std::string, int>& input_status,
-                        std::map<std::string, const int>& default_ints,
-                        std::map<std::string, const double>& default_reals);
+void diphoton_setup(std::string filename, const event_dumper_info&, diphoton_input& diph_in);
+
+void diphoton_ReadInput(std::string filename, diphoton_input& diph_in);
 
 #endif

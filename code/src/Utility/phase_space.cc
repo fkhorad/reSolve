@@ -1,5 +1,8 @@
-
 #include "phase_space.h"
+
+#include <iostream>
+#include <fstream>
+
 
 // PSpoint class methods
 
@@ -25,6 +28,9 @@ int PSpoint::set_mom(int num, four_momentum mom){
   }
   else
     return 1;
+};
+void PSpoint::add_mom(four_momentum mom){
+  momenta.push_back(mom);
 };
 
 void PSpoint::set_products(){
@@ -63,25 +69,25 @@ void PSpoint::set_dim(int new_dim){
 
 // Get
 
-int PSpoint::dim(){
+int PSpoint::dim() const{
    int res = momenta.size();
    return res;
 };
 
 
-four_momentum PSpoint::mom(int i){
+four_momentum PSpoint::mom(int i) const{
   four_momentum res = momenta.at(i);
   return res;
 };
-double PSpoint::ss(int i, int j){
+double PSpoint::ss(int i, int j) const{
   double res = DotProducts.at(i).at(j);
   return res;
 };
-std::complex<double> PSpoint::sa(int i, int j){
+std::complex<double> PSpoint::sa(int i, int j) const{
   std::complex<double> res = SpinProductsA.at(i).at(j);
   return res;
 };
-std::complex<double> PSpoint::sb(int i, int j){
+std::complex<double> PSpoint::sb(int i, int j) const{
   std::complex<double> res = SpinProductsB.at(i).at(j);
   return res;
 };
@@ -120,319 +126,6 @@ void PSpoint::PS_checker(int n_incoming){
 };
 
 
-//////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////
-
-// Non-member functions: various basic PS-setting routines
-
-double set_PS_twobody(const double* randoms, const double* masses, PSpoint& PS){
-
-// Randoms to physical assignment
-  double pi = k_constants::pi;
-  double costheta = 2.*randoms[0]-1.;
-  double phi = 2.*pi*randoms[2];
-// Aux parameters
-  double sintheta = std::sqrt(1.-pow(costheta,2));
-//
-  double lambda;
-  lambda = std::pow(masses[0],4) + std::pow(masses[1],4) + std::pow(masses[2],4) -
-    2.*std::pow(masses[0],2) * std::pow(masses[1],2) - 2.*std::pow(masses[0],2) * std::pow(masses[2],2) -
-    2.*std::pow(masses[1],2) * std::pow(masses[2],2);
-  double p12 = std::sqrt(lambda)/(2.*masses[0]);
-  double vers[3] = {sintheta*std::cos(phi), std::sqrt(1.-std::pow(costheta,2))*std::sin(phi), costheta};
-  double en1 = std::sqrt(std::pow(p12,2) + std::pow(masses[1],2));
-  double en2 = std::sqrt(std::pow(p12,2) + std::pow(masses[2],2));
-//
-// The 2 4-momenta
-  double mom_1[4] = {en1, p12*vers[0], p12*vers[1], p12*vers[2]};
-  double mom_2[4] = {en2, -p12*vers[0], -p12*vers[1], -p12*vers[2]};
-// Transfer them to the PS object
-  PS.set_dim(2);
-  PS.set_mom(0,mom_1);
-  PS.set_mom(1,mom_2);
-  double weight = 1./(16.*std::pow(pi,2)) * p12/masses[0] *4.*pi;
-  return weight;
-};
-
-
-double set_PS_threebody(const double* randoms, const double* masses, PSpoint& PS){
-
-  double pi = k_constants::pi;
-
-  double mQ = std::sqrt( pow(masses[2]+masses[3],2) +
-    ( std::pow(masses[0]-masses[1],2) - std::pow(masses[2]+masses[3],2) ) *
-    randoms[0] );
-
-  double massA[] = {masses[0], masses[1], mQ};
-  double randA[] = {randoms[1], randoms[2]};
-  double massB[] = {mQ, masses[2], masses[3]};
-  double randB[] = {randoms[3], randoms[4]};
-
-  PSpoint psp_aux;
-
-  double weightA = set_PS_twobody (randA, massA, PS);
-
-  double weightB = set_PS_twobody (randB, massB, psp_aux);
-
-  std::vector<four_momentum> boost= SetBoost(PS.mom(1),false);
-
-  PS.set_mom(1, LorDot(boost,psp_aux.mom(0)) );
-  PS.set_dim(3);
-  PS.set_mom(2, LorDot(boost,psp_aux.mom(1)) );
-
-  double weight = weightA * weightB *
-    (std::pow(masses[0]-masses[1],2) - std::pow(masses[2]+masses[3],2)) / (2.*pi);
-  return weight;
-
-};
-double set_PS_threebody(const double* randoms, const double* masses,
-  double mQ2aa, double mQ2bb, PSpoint& PS){
-
-  double pi = k_constants::pi;
-
-  double mQ2min = std::max(std::pow(masses[2]+masses[3],2), mQ2aa);
-  double mQ2max = std::min(std::pow(masses[0]-masses[1],2), mQ2bb);
-  if(mQ2max < mQ2min) mQ2max = mQ2min;
-
-  double mQ = std::sqrt( mQ2min + (mQ2max - mQ2min) * randoms[0] );
-
-  double massA[] = {masses[0], masses[1], mQ};
-  double randA[] = {randoms[1], randoms[2]};
-  double massB[] = {mQ, masses[2], masses[3]};
-  double randB[] = {randoms[3], randoms[4]};
-
-  PSpoint psp_aux;
-
-  double weightA = set_PS_twobody (randA, massA, PS);
-
-  double weightB = set_PS_twobody (randB, massB, psp_aux);
-
-  std::vector<four_momentum> boost= SetBoost(PS.mom(1),false);
-
-  PS.set_mom(1, LorDot(boost,psp_aux.mom(0)) );
-  PS.set_dim(3);
-  PS.set_mom(2, LorDot(boost,psp_aux.mom(1)) );
-
-  double weight = weightA * weightB *(mQ2max - mQ2min) / (2.*pi);
-
-  return weight;
-
-};
-
-
-double nonQCD2to2PS(const double* x, double en, PSpoint& PS){
-
-  PSpoint PSfin;
-  const double energy[3] = {en, 0., 0.};
-
-  double weight = set_PS_twobody(x, energy, PSfin);
-
-  four_momentum mom1(4, 0.);
-  four_momentum mom2(4, 0.);
-  mom1[0] = mom1[3] = mom2[0] = en/2.;
-  mom2[3] = -en/2.;
-  PS.set_dim(4);
-  PS.set_mom(0, mom1);
-  PS.set_mom(1, mom2);
-  PS.set_mom(2, PSfin.mom(0));
-  PS.set_mom(3, PSfin.mom(1));
-
-  PS.set_products();
-
-  return weight;
-};
-
-double nonQCD2to3PS(const double* x, double en, PSpoint& PS){
-
-  PSpoint PSfin;
-  const double energy[3] = {en, 0., 0.};
-
-  double weight = set_PS_threebody(x, energy, PSfin);
-
-  four_momentum mom1(4, 0.);
-  four_momentum mom2(4, 0.);
-  mom1[0] = mom1[3] = mom2[0] = en/2.;
-  mom2[3] = -en/2.;
-  PS.set_dim(5);
-  PS.set_mom(0, mom1);
-  PS.set_mom(1, mom2);
-  for(int ii=2; ii<5; ii++)
-    PS.set_mom(ii, PSfin.mom(ii));
-
-  PS.set_products();
-
-  return weight;
-
-};
-double nonQCD2to3PS(const double* x, double en, double mQ2aa, double mQ2bb, PSpoint& PS){
-
-  PSpoint PSfin;
-  const double energy[3] = {en, 0., 0.};
-
-  double weight = set_PS_threebody(x, energy, mQ2aa, mQ2bb, PSfin);
-
-  four_momentum mom1(4, 0.);
-  four_momentum mom2(4, 0.);
-  mom1[0] = mom1[3] = mom2[0] = en/2.;
-  mom2[3] = -en/2.;
-
-  PS.set_dim(5);
-  PS.set_mom(0, mom1);
-  PS.set_mom(1, mom2);
-  for(int ii=2; ii<5; ii++)
-    PS.set_mom(ii, PSfin.mom(ii));
-
-  PS.set_products();
-
-  return weight;
-
-};
-
-double QCD_0_2to3PS(const double* x, double en, PSpoint& PS){
-
-  PSpoint PSfin;
-
-// For the moment, I use the first two randoms as momentum fractions
-
-  double x1 = x[0]; double x2 = x[1];
-  double en_hat = std::sqrt(x1*x2)*en;
-
-
-// First generate final state momenta in partonic CM frame
-
-  const double energy[3] = {en_hat, 0., 0.};
-
-  double weight = set_PS_threebody(x+2, energy, PSfin);
-
-
-// Then boost back to hadronic CM frame and set the full PS
-// Note that I'm using all-outgoing formalism, so initial state momenta have
-// negative energies
-
-  four_momentum mom1(4, 0.);
-  four_momentum mom2(4, 0.);
-  mom1[0] = -x1*en/2.; mom1[3] = x1*en/2.;
-  mom2[0] = -x2*en/2.; mom2[3] = -x2*en/2.;
-
-  PS.set_dim(5);
-  PS.set_mom(0, mom1);
-  PS.set_mom(1, mom2);
-
-  four_momentum mom_temp;
-  for(int ii=0; ii<4; ii++) mom_temp[ii] = -mom1[ii] - mom2[ii];
-  std::vector<four_momentum> boost = SetBoost(mom_temp, false);
-
-  for(int ii=0; ii<3; ii++){
-    mom_temp = LorDot(boost, PSfin.mom(ii));
-    PS.set_mom(ii+2, mom_temp);
-  }
-
-  PS.set_products();
-
-//  std::cout << "\n" << "x1 and x2: " << x1 << " - " << x2 << "\n";
-//  PS_checker(0);
-
-  return weight;
-
-};
-
-double QCD_0_2to2PS(const double* x, double en, PSpoint& PS){
-
-  PSpoint PSfin;
-
-// For the moment, I use the first two randoms as momentum fractions
-
-  double x1 = x[0]; double x2 = x[1];
-  double en_hat = std::sqrt(x1*x2)*en;
-
-
-// First generate final state momenta in partonic CM frame
-
-  const double energy[3] = {en_hat, 0., 0.};
-
-  double weight = set_PS_twobody(x+2, energy, PSfin);
-
-
-// Then boost back to hadronic CM frame and set the full PS
-// Note that I'm using all-outgoing formalism, so initial state momenta have
-// negative energies
-
-  four_momentum mom1(4, 0.);
-  four_momentum mom2(4, 0.);
-  mom1[0] = -x1*en/2.; mom1[3] = x1*en/2.;
-  mom2[0] = -x2*en/2.; mom2[3] = -x2*en/2.;
-  PS.set_dim(4);
-  PS.set_mom(0, mom1);
-  PS.set_mom(1, mom2);
-
-  four_momentum mom_temp;
-  for(int ii=0; ii<4; ii++) mom_temp[ii] = -mom1[ii] - mom2[ii];
-  std::vector<four_momentum> boost = SetBoost(mom_temp, false);
-
-  for(int ii=0; ii<2; ii++){
-    mom_temp = LorDot(boost, PSfin.mom(ii));
-    PS.set_mom(ii+2, mom_temp);
-  }
-
-  PS.set_products();
-
-//  std::cout << "\n" << "x1 and x2: " << x1 << " - " << x2 << "\n";
-//  PS_checker(0);
-
-  return weight;
-
-};
-
-
-double QCD_1_2to3PS(const double* x, double en, double mQ2aa, double mQ2bb, PSpoint& PS){
-
-  PSpoint PSfin;
-
-// For the moment, I use the first two randoms as momentum fractions
-
-  double x1 = x[0]; double x2 = x[1];
-  double en_hat = std::sqrt(x1*x2)*en;
-
-
-// First generate final state momenta in partonic CM frame
-
-  const double energy[3] = {en_hat, 0., 0.};
-
-  double weight = set_PS_threebody(x+2, energy, mQ2aa, mQ2bb, PSfin);
-
-
-// Then boost back to hadronic CM frame and set the full PS
-// Note that I'm using all-outgoing formalism, so initial state momenta have
-// negative energies
-
-  four_momentum mom1(4, 0.);
-  four_momentum mom2(4, 0.);
-  mom1[0] = -x1*en/2.; mom1[3] = x1*en/2.;
-  mom2[0] = -x2*en/2.; mom2[3] = -x2*en/2.;
-  PS.set_dim(5);
-  PS.set_mom(0, mom1);
-  PS.set_mom(1, mom2);
-
-  four_momentum mom_temp;
-  for(int ii=0; ii<4; ii++) mom_temp[ii] = -mom1[ii] - mom2[ii];
-  std::vector<four_momentum> boost = SetBoost(mom_temp, false);
-
-  for(int ii=0; ii<3; ii++){
-    mom_temp = LorDot(boost, PSfin.mom(ii));
-    PS.set_mom(ii+2, mom_temp);
-  }
-
-  PS.set_products();
-
-//  std::cout << "\n" << "x1 and x2: " << x1 << " - " << x2 << "\n";
-//  PS_checker(0);
-
-  return weight;
-
-};
-
-
-
 void set_PS_fromfile(const char* filename, PSpoint& PS){
 
     std::fstream myfile(filename, std::ios_base::in);
@@ -459,3 +152,65 @@ void set_PS_fromfile(const char* filename, PSpoint& PS){
     }
 
 };
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+void set_PS_twobody(double costheta, double phi, const four_momentum P_in, double m1, double m2, PSpoint& PS){
+
+  double sintheta = std::sqrt(1.-std::pow(costheta,2));
+  double M0_2 = LorDot(P_in,P_in);
+  double m1_2 = m1*m1;
+  double m2_2 = m2*m2;
+
+//
+  double lambda;
+  lambda = M0_2*M0_2 + m1_2*m1_2 + m2_2*m2_2 - 2.*M0_2*m1_2 - 2.*M0_2*m2_2 - 2.*m1_2*m2_2;
+  double p12_2 = lambda/(4.*M0_2);
+  double p12 = std::sqrt(p12_2);
+  double vers[3] = {sintheta*std::cos(phi), std::sqrt(1.-std::pow(costheta,2))*std::sin(phi), costheta};
+  double en1 = std::sqrt(p12_2 + m1_2);
+  double en2 = std::sqrt(p12_2 + m2_2);
+//
+// The 4-momenta in the CM
+  four_momentum qq1 = {en1, p12*vers[0], p12*vers[1], p12*vers[2]};
+  four_momentum qq2 = {en2, -p12*vers[0], -p12*vers[1], -p12*vers[2]};
+
+  // std::cout << "qq1 = " << qq1[0] << " " << qq1[1] << " " << qq1[2] << " " << qq1[3] << std::endl;
+  // std::cout << "qq2 = " << qq2[0] << " " << qq2[1] << " " << qq2[2] << " " << qq2[3] << std::endl;
+  
+// Boost them to original frame
+  std::vector<four_momentum> lor1 = SetBoost(P_in, false);
+  four_momentum mom_1 = LorDot(lor1, qq1);
+  four_momentum mom_2 = LorDot(lor1, qq2);
+
+  // std::cout << "lor1 = " << std::endl;
+  // std::cout << lor1[0][0] << " " << lor1[0][1] << " " << lor1[0][2] << " " << lor1[0][3] << std::endl;
+  // std::cout << lor1[1][0] << " " << lor1[1][1] << " " << lor1[1][2] << " " << lor1[1][3] << std::endl;
+  // std::cout << lor1[2][0] << " " << lor1[2][1] << " " << lor1[2][2] << " " << lor1[2][3] << std::endl;
+  // std::cout << lor1[3][0] << " " << lor1[3][1] << " " << lor1[3][2] << " " << lor1[3][3] << std::endl;
+
+  
+  // std::cout << "mom_1 = " << mom_1[0] << " " << mom_1[1] << " " << mom_1[2] << " " << mom_1[3] << std::endl;
+  // std::cout << "mom_2 = " << mom_2[0] << " " << mom_2[1] << " " << mom_2[2] << " " << mom_2[3] << std::endl;
+  // std::cout << "mom_1.mom_1 = " << LorDot(mom_1,mom_1) << std::endl;
+  // std::cout << "mom_2.mom_2 = " << LorDot(mom_2,mom_2) << std::endl;
+    
+
+// Transfer them to the PS object
+  PS.add_mom(mom_1);
+  PS.add_mom(mom_2);
+}
+//
+void set_PS_threebody(double cos1, double phi1, double mQ, double cos2, double phi2, const four_momentum P_in, double m1, double m2, double m3, PSpoint& PS){
+
+  set_PS_twobody (cos1, phi1, P_in, m1, mQ, PS);
+
+  PSpoint psp_aux;
+  set_PS_twobody (cos2, phi2, PS.mom(1), m2, m3, psp_aux);
+
+  PS.set_mom(PS.dim()-1, psp_aux.mom(0));
+  PS.add_mom(psp_aux.mom(1));
+
+}

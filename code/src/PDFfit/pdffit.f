@@ -8,7 +8,7 @@ c Extracted and modified by F. Coradeschi, 2017
 c
 c USAGE:
 c
-c 1) call fiteador(xtauf,muf2,energy_sector,pdf_label)
+c 1) call fiteador(xtauf,muf2,energy_sector,pdf_label, aa_in)
 c
 c where double precision xtauf is the MAXIMUM value of the rate of
 c s_partonic / s_hadronic
@@ -85,11 +85,11 @@ c nor the photon PDFs. This could be modified with some (undocumented) effort
 c on part of the user.
 c
 
-      subroutine fiteador(xtauf,muf2,energy_sector,pdf_label)
+      subroutine fiteador(xtauf,muf2,energy_sector,pdf_label,aa_in)
        IMPLICIT NONE
 c Dummy parameters
        double precision, intent(in) :: xtauf, muf2
-       integer, intent(in) :: energy_sector, pdf_label
+       integer, intent(in) :: energy_sector, pdf_label, aa_in
 c
 c Local parameters
        double precision yav(30), xtau1, xtau2, qmin_p, q_temp, etam
@@ -103,7 +103,7 @@ C Maximum rapidity -- limited to avoid reaching the end of phase space
        etam=IDINT(etam*10)/10d0
 
 c Set auxiliary function parameter aa
-       aa=2.5d0
+       aa=aa_in;
 
 c Store muf2 used for this fit
        if(energy_sector > 20) then
@@ -375,8 +375,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
 c.....aa can be changed to try to improve the fit
 c.....the common changes it at the same time in the subroutine f0moments
-      aa=2.5
-c      aa=3.5
       npoints=npoints2
       aextra=1
       if (id.eq.6) then
@@ -413,14 +411,27 @@ c      if (id.eq.6) x=rx**(1-xx1(i))
          elseif(id.eq.8) then
             f2=bot
          endif
-         chi2=chi2+(f2-f)**2*x**1.2*aextra
+       aaa=1d0    !ADDED
+         if (x.lt.rx)   aaa=30d0  !ADDED
+c      aextra=1
+c      if (id.eq.6) then
+c          npoints=npoints1                                                                                                  c           aextra=30d0
+c      endif
+         if(id.gt.2) then
+         chi2=chi2+(f2-f)**2*aaa*x**1.2   !*aextra
+         elseif(id.eq.1) then
+         chi2=chi2+(f2-f)**2*300*aaa
+         elseif(id.eq.2) then
+         chi2=chi2+(f2-f)**2*300*aaa
+         endif
+
  133   continue
       enddo
 
       do i=1,npoints,1
          x=rx**( (1+xx2(i)))
 
-c      if (id.eq.6) x=rx**(1+xx1(i))
+c      if (id.eq.6) x=rx**(1+xx2(i))
 
          if (x.lt.1d-5) goto 134
          f=a1*x**a2*(1-x)**a3*(1+a4*x+a5*x**(0.5)+a6*x**(1.5)+A7*X**2
@@ -443,10 +454,25 @@ c      if (id.eq.6) x=rx**(1+xx1(i))
          elseif(id.eq.8) then
             f2=bot
          endif
-         chi2=chi2+(f2-f)**2*x**1.2
+        aaaa=2d0
+         if (x.gt.rx)  aaaa=35d0
+
+c      aextra=1
+c      if (id.eq.6) then
+c          npoints=npoints1
+c          aextra=1d0
+c      endif
+
+
+         if(id.gt.2) then
+         chi2=chi2+(f2-f)**2*aaaa*x**1.2  !*aextra
+         elseif(id.eq.1) then
+         chi2=chi2+(f2-f)**2*aaaa  !*300
+         elseif(id.eq.2) then
+         chi2=chi2+(f2-f)**2*aaaa  !*300
+         endif
  134   continue
         enddo
-
 C.....return the parameters to save the last set
       do i=1,8
          parsal(i)=param(i)

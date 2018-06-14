@@ -8,18 +8,19 @@
 
 #include "constants.h"
 
-class PSdep_variables;
-class ResummationInfo;
+struct resu_PS;
+struct ResummationInfo;
 struct pdffit;
+class c_mstwpdf;
 
+double xsection(const resu_PS&, ResummationInfo*);
 
-double xsection(PSdep_variables&, ResummationInfo*);
+void k_getMSTWpdf(c_mstwpdf* PDF_, double* pdf1, int Nf, int ih1, double x1, double muf);
 
-double xsection2(PSdep_variables&, ResummationInfo*);
+double xsection2(const resu_PS&, ResummationInfo*);
 
-void distributions(double x, double& U, double& D, double& US, double& DS, double& SS, double& GL, double& CH, double& BO, int ih, int ifit1, int ifit2, pdffit& pdfbeam1fit, double aapow, int verbosity);
+void distributions(double x, double* FX, int Nf, int ih, int ifit1, int ifit2, pdffit& pdfbeamfit, double aapow);
 
-double pdf_func(std::vector<std::array<std::array<double, k_constants::nfitmax>, k_constants::nfitpars> >& A_FL,
-   double x, int ifit1, int ifit2, double aapow);
+double pdf_func(std::vector<std::array<std::array<double, k_constants::nfitmax>, k_constants::nfitpars> >& A_FL, double x, int ifit1, int ifit2, double aapow);
 
 #endif

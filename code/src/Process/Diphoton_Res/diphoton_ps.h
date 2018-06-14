@@ -5,8 +5,8 @@
 #include "lorentz.h"
 
 class PSpoint;
-class PSdep_variables;
-class ResummationInfo;
+struct resu_PS;
+struct ResummationInfo;
 
 
 extern "C" {
@@ -14,12 +14,7 @@ extern "C" {
 }
 
 
-double diphoton_ps(const double x[], double CM_energy, ResummationInfo*,
-		   double& randsjacob, PSpoint&, PSdep_variables&);
+double diphoton_ps(const double x[], ResummationInfo*, PSpoint&, resu_PS&);
 
-double kinematics(double M2, double qT2, double eta, double thetaCM,
-                  double phiCM, double sqs, four_momentum& k1,
-                  four_momentum& k2, four_momentum& qq1, four_momentum& qq2,
-                  int verbosity);
 
 #endif

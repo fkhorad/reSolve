@@ -4,13 +4,12 @@
 #define INV_MELLIN_H
 
 #include <complex>
-class PSdep_variables;
-class ResummationInfo;
+
+struct resu_PS;
+struct ResummationInfo;
 
 
-double inversemellin_resummed(std::complex<double> b,
-                              PSdep_variables* resu, ResummationInfo* resuminfo);
+double inversemellin_resummed(std::complex<double> b, resu_PS* resu, ResummationInfo* resuminfo);
 
 
 #endif
- 

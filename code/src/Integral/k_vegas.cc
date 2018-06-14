@@ -2,13 +2,14 @@
 
 // Integrate on an unit hypercube!
 
-int vegas_integral::integrate(k_integrand_t func, int neval, int verbose,
-                              void *userdata){
+int vegas_integral::integrate(k_integrand_t func, int neval, int verbose, void *userdata){
 
 // Initialization
 
   int return_code;
+  // std::cout << "niter = " << niter << std::endl;
   int niter = last_iter+1;
+
 
   if(verbose>1 || (verbose==1 && niter ==1))
     std::cout << "\n" << "****************************************************" << "\n"
@@ -71,6 +72,7 @@ int vegas_integral::integrate(k_integrand_t func, int neval, int verbose,
       std::cout << "iteration number: " << niter << std::endl;
       ff = 0.0; //set ff = 0.0 so avoid nan infecting further points and overall answer
       std::cout << "ff taken as: " << ff << std::endl;
+      exit(EXIT_FAILURE);
     }
 
     ff = ff*weight;
@@ -104,6 +106,20 @@ int vegas_integral::integrate(k_integrand_t func, int neval, int verbose,
     weight2=ti2/sdi;  // (Relative uncertainty estimate on this iter)^(-2) --
                       // mainly used for averaging over multiple iterations
 
+// TEMP
+  std::cout << "PRE\n";
+  std::cout << "si: " << si << "\n";
+  std::cout << "si2: " << si2 << "\n";
+  std::cout << "swgt: " << swgt << "\n";
+  std::cout << "schi: " << schi << "\n";
+
+
+// Store previous values for cross-checks
+  pre_si = si;
+  pre_si2 = si2;
+  pre_swgt = swgt;
+  pre_schi = schi;
+
   if(weight2<1.e14){
     si = si + ti*weight2;
     si2 = si2 + ti2;
@@ -117,18 +133,26 @@ int vegas_integral::integrate(k_integrand_t func, int neval, int verbose,
     return_code = 0;
   }
   else{
-    
+
     if(verbose >= 1) std::cout << " WARNING: zero error estimate!" << "\n\n";
-    
+
     si = ti;
     si2 = ti*ti;
 //    avgi = ti;
 //    sd = 0.;
 //    chi2a = -1.;
-    
+
     return_code = -1;
   }
-  
+
+// TEMP
+ std::cout << "POST\n";
+ std::cout << "si: " << si << "\n";
+ std::cout << "si2: " << si2 << "\n";
+ std::cout << "swgt: " << swgt << "\n";
+ std::cout << "schi: " << schi << "\n";
+
+
   last_neval = neval;
   last_iter = niter;
   last_ti = ti;
@@ -152,14 +176,14 @@ void vegas_integral::iteration_output(std::ostream & out1){
   int niter = last_iter;
   int neval = last_neval;
   double weight2 = ti2/sdi;
-  
+
   if(weight2<1.e14){
     avgi = si/swgt;
     sd = swgt*niter/si2;
     chi2a = sd*(schi/swgt-avgi*avgi)/(niter-.999);
     sd = std::sqrt(1./sd);
   }
-  else{    
+  else{
     out1 << " WARNING: zero error estimate in iteration " << niter << "\n\n";
     avgi = ti;
     sd = 0.;
@@ -276,11 +300,11 @@ void vegas_integral::refine_grid(){
 }
 
 void vegas_integral::combine_partial_iters(int nparts, vegas_integral* iter_parts){
- 
+
  this->reset_resize(iter_parts[0].int_dim);
- last_iter = iter_parts[0].last_iter;
  this->set_alpha(iter_parts[0].alpha);
 
+// Copy common info from first object in grid: grid+cumulatives
  for(int jj=0; jj<int_dim; jj++){
    for(int kk=0; kk<grid_dim; kk++){
      di[jj][kk] = 0.;
@@ -288,11 +312,24 @@ void vegas_integral::combine_partial_iters(int nparts, vegas_integral* iter_part
      grid[jj][kk] = iter_parts[0].grid[jj][kk];
    }
  }
+ last_iter = iter_parts[0].last_iter;
+//
+ si = iter_parts[0].pre_si;
+ si2 = iter_parts[0].pre_si2;
+ swgt = iter_parts[0].pre_swgt;
+ schi = iter_parts[0].pre_schi;
+
+// TEMP
+ std::cout << "PRE\n";
+ std::cout << "si: " << si << "\n";
+ std::cout << "si2: " << si2 << "\n";
+ std::cout << "swgt: " << swgt << "\n";
+ std::cout << "schi: " << schi << "\n";
 
  double nti = 0., ntsi = 0.;
- 
+
  for(int ii=0; ii<nparts; ii++){
- 
+
    int curr_neval = iter_parts[ii].last_neval;
    last_neval = last_neval + curr_neval;
    nti = nti + curr_neval*iter_parts[ii].last_ti;
@@ -309,7 +346,7 @@ void vegas_integral::combine_partial_iters(int nparts, vegas_integral* iter_part
        dd[jj][kk] = dd[jj][kk] + (dcurr_neval/last_neval)*(dcurr_neval/last_neval)*iter_parts[ii].dd[jj][kk];
      }
    }
-   
+
  }
   double ti2 = last_ti*last_ti;
   last_sdi = last_tsi*last_neval - ti2;
@@ -319,8 +356,7 @@ void vegas_integral::combine_partial_iters(int nparts, vegas_integral* iter_part
   if(last_sdi==0.)
     weight2=1.e15;
   else
-    weight2=ti2/last_sdi;  // (Relative uncertainty estimate on this iter)^(-2) --
-                      // mainly used for averaging over multiple iterations
+    weight2=ti2/last_sdi;  // (Relative uncertainty estimate on this iter)^(-2) -- mainly used for averaging over multiple iterations
 
   if(weight2<1.e14){
     si = si + last_ti*weight2;
@@ -334,6 +370,14 @@ void vegas_integral::combine_partial_iters(int nparts, vegas_integral* iter_part
     swgt = 0.;
     schi = 0.;
   }
+
+// TEMP
+ std::cout << "POST\n";
+ std::cout << "si: " << si << "\n";
+ std::cout << "si2: " << si2 << "\n";
+ std::cout << "swgt: " << swgt << "\n";
+ std::cout << "schi: " << schi << "\n";
+
 }
 
 
@@ -392,6 +436,7 @@ void vegas_integral::reset_resize(int int_dim_new, int grid_dim_new){
 void vegas_integral::reset_cumulatives(){
 
  si = 0.; si2 = 0.; swgt = 0.; schi = 0.;
+ pre_si = 0.; pre_si2 = 0.; pre_swgt = 0.; pre_schi = 0.;
  last_neval = 0; last_iter = 0;
  last_ti = 0.; last_tsi = 0.; last_sdi = 0.;
 
@@ -434,18 +479,16 @@ int vegas_integral::r_iter(){
 }
 //
 void vegas_integral::info_dump(std::ostream & out1){
-  
+
   out1 << "Basics:\n";
   out1 << "  alpha: " << alpha << "  int_dim: " << int_dim
     << "  grid_dim: " << grid_dim << "\n\n";
-  
+
   out1 << "Cumulatives:\n";
-  out1 << "si: " << si << "  si2: " << si2 << "  swgt: " <<
-    swgt << "  schi: " << schi << "  last_neval: " << last_neval
-    << "  last_iter: " << last_iter << "\n"
-    << "  last_ti: " << last_ti << "  last_tsi: " << last_tsi
-    << "  last_sdi: " << last_sdi << "\n\n";
-  
+  out1 << "  si: " << si << "  si2: " << si2 << "  swgt: " << swgt << "  schi: " << schi << "  last_iter: " << last_iter << "\n";
+  out1 << "  pre_si: " << pre_si << "  pre_si2: " << pre_si2 << "  pre_swgt: " << pre_swgt << "  pre_schi: " << pre_schi << "\n";
+  out1 << "  last_neval: " << last_neval  << "  last_ti: " << last_ti << "  last_tsi: " << last_tsi << "  last_sdi: " << last_sdi << "\n\n";
+
   for(int ll=0; ll<int_dim; ll++){
       out1 << "\n data for axis  " << ll+1 << "\n"
           << "    x         di            d" << "\n";
@@ -474,10 +517,13 @@ int vegas_integral::copy_from_file(std::istream & infile){
   std::getline(infile, line);
   std::istringstream iss2(line);
   iss2 >> word >> si >> word >> si2 >> word >> swgt >> word >> schi
-     >> word >> last_neval  >> word >> last_iter;
+     >> word >> last_iter;
   std::getline(infile, line);
   std::istringstream iss3(line);
-  iss3 >> word >> last_ti >> word >> last_tsi >> word >> last_sdi;
+  iss3 >> word >> pre_si >> word >> pre_si2 >> word >> pre_swgt >> word >> pre_schi;
+  std::getline(infile, line);
+  std::istringstream iss4(line);
+  iss4 >> word >> last_neval >> word >> last_ti >> word >> last_tsi >> word >> last_sdi;
 //
   grid.resize(int_dim);
   dd.resize(int_dim);
@@ -501,7 +547,7 @@ int vegas_integral::copy_from_file(std::istream & infile){
 
   if(infile.fail()) return_code = 1;
   return return_code;
-  
+
 }
 
 

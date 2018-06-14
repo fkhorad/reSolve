@@ -1,9 +1,9 @@
 #ifndef _PostProcH_
 #define _PostProcH_
 
-class all_info;
+class InputPars;
 
-void PostProc_basic(all_info&);
+void PostProc_basic(const InputPars& input_1);
 
 
 #endif

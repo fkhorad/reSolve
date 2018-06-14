@@ -1,26 +1,19 @@
-// Calculates the process dependent parts for the hard function calculations,
-// here only diphoton is included for now, much of code is repackaged and rewritten
+// Calculates the process dependent parts for the hard function calculations for the diphoton process
 // from H2f.cpp Copyright 2010 Leandro <leandro@ubuntu>
 
 #include "diphoton_hard.h"
 
+#include "polylogs.h"
 
-void sigmaijdiphotoncalc(diphoton_input* diph_in, PSpoint& PS, double jacob,
-                         std::vector<std::vector<double> >& sigmaij, double alphas) {
-// Calculates the Born cross section and the complete modified cross-section which appears in the "universal"
-// resummation formalism, in the DY resummation scheme. It returns the Born cross-section along with the H1q and H2q coefficients.
-// It includes also the gg Box contribution. N.B. Without the 1/s "flux factor".
 
-//  Note in old code sigmaij was indexed -5 to 5 in each direction but here it's 0 to 10 in each for simplicity.
-    sigmaij.resize(11);
-    for (int a = 0; a<11; a++) {
-        sigmaij[a].resize(11,0.);
-    }
-    if (diph_in->verbosity >= 12) {
-      std::cout << "sigmaijdiphotoncalc: " << std::endl;
-    }
-    double gevpb = diph_in->gevm2topb;
-    double alphaem = diph_in->alpha_QED;
+void sigmaijdiphotoncalc(diphoton_input* diph_in, PSpoint& PS, std::vector<std::vector<double> >& sigmaij, double alphas) {
+// Born partonic cross-sections
+// Normalisation is such that the COMPLETE dsigma/dOmega double differential cross-sections are returned
+// There is also the option to include the gg channel Box contribution
+
+    int Nf = diph_in->res_1.Nf;
+    double gevpb = diph_in->res_1.gevm2topb;
+    double alphaem = diph_in->res_1.alpha_QED;
     double Qu = 2./3.;
     double Qd = -1./3.;
     double pi = k_constants::pi;
@@ -30,72 +23,45 @@ void sigmaijdiphotoncalc(diphoton_input* diph_in, PSpoint& PS, double jacob,
     double u = -2.*PS.ss(1,2);
     double costheta = 1. + 2.*t/s;
 
-    if (diph_in->verbosity >= 12) {
-      std::cout << "procdephard_diphoton.cc" << std::endl;
-      std::cout << "costheta = " << costheta << std::endl;
-      std::cout << "jacob = " << jacob << std::endl;
-    }
-
-    double KinFac = jacob*(t/u + u/t);
-    if (diph_in->verbosity >= 12) {
-      std::cout << "KinFac = " << KinFac << std::endl;
-      std::cout << "for kinfac: " << std::endl;
-    }
-
-
-
     double BOX = 0.;
     double sigma0 = 0.;
 //Box switch
     int boxflag = diph_in->boxflag;
+    double flux = 1./(2.*s);
     if (boxflag == 0 || boxflag == 1){
-      sigma0 = gevpb*pi*(alphaem*alphaem)/3.0;
+      double KinFac = 8*(t/u + u/t); // |M|^2 summed over spins stripped of charges and coupling constants
+      double spincolavg = 1/12.;
+      sigma0 = gevpb*spincolavg*flux*(alphaem*alphaem)/2.*KinFac; // This includes the 1/(32pi^2) PS factor for d/domega, with 1/(16pi^2) absorbed into the definition of alphaem
+      // std::cout << "sigma0 = " << sigma0 << std::endl;
+      // std::cout << "gevpb = " << gevpb << std::endl;
+      // std::cout << "spincolavg = " << spincolavg << std::endl;
+      // std::cout << "flux = " << flux << std::endl;
+      // std::cout << "alphaem^2 = " << alphaem*alphaem << std::endl;
+      // std::cout << "KinFac = " << KinFac << std::endl;
     }
     if (boxflag == 1 || boxflag == 2){
-      BOX=jacob*ggBoxdiphotoncalc(costheta, diph_in->verbosity);
+      double spincolavgGG = 1/32.;
+      BOX=gevpb*spincolavgGG*flux*(alphas*alphas*16.*pi*pi)*(alphaem*alphaem)/2.*ggBoxdiphotoncalc(costheta, diph_in->res_1.verbosity); // This has an additional 16pi^2 to compensate for the introduction of alpha_s
     }
     if (boxflag<0 || boxflag>2){
       std::cout << "boxflag must be 0,1,2" << std::endl;
       exit(EXIT_FAILURE);
     }
 
-
-    sigmaij[6][4] = sigma0*(std::pow(Qu,4))*KinFac;
-    sigmaij[9][1] = sigmaij[6][4];
-    sigmaij[4][6] = sigmaij[6][4];
-    sigmaij[1][9] = sigmaij[6][4];
-    sigmaij[7][3] = sigma0*std::pow(Qd,4)*KinFac;
-    sigmaij[8][2] = sigmaij[7][3];
-    sigmaij[10][0] = sigmaij[7][3];
-    sigmaij[3][7] = sigmaij[7][3];
-    sigmaij[2][8] = sigmaij[7][3];
-    sigmaij[0][10] = sigmaij[7][3];
-    sigmaij[5][5] = gevpb*((alphas*alphas)*(alphaem*alphaem)/(64*pi))*BOX;
-
-
-      if (diph_in->verbosity >= 12) {
-        std::cout << "BOX = " << BOX << std::endl;
-      }
-
-      if (diph_in->verbosity >= 13) {
-        std::cout << "sigma0 = " << sigma0 << std::endl;
-        std::cout << "gevpb = " << gevpb << std::endl;
-        std::cout << "alphaem = " << alphaem << std::endl;
-        std::cout << "KinFac = " << KinFac << std::endl;
-      }
-      if (diph_in->verbosity >= 13) {
-        std::cout << "sigmaij = "<< std::endl;
-        for (int i = 0; i <11; i++) {
-          for (int j = 0; j <11; j++) {
-          std::cout << "sigmaij[" << i<< "][" << j << "] = " << sigmaij[i][j] << std:: endl;
-          }
-        }
-      }
-
-    if (diph_in->verbosity >= 12) {
-      std::cout << "KinFac = " << KinFac << std::endl;
-      std::cout << "BOX = " << BOX << std::endl;
-    }
+// Up quarks
+    sigmaij[Nf+1][Nf-1] = sigma0*(std::pow(Qu,4));
+    if (Nf>=4) sigmaij[Nf+4][Nf-4] = sigmaij[Nf+1][Nf-1];
+    sigmaij[Nf-1][Nf+1] = sigmaij[Nf+1][Nf-1];
+    if (Nf>=4) sigmaij[Nf-4][Nf+4] = sigmaij[Nf+1][Nf-1];
+// Down quarks
+    sigmaij[Nf+2][Nf-2] = sigma0*std::pow(Qd,4);
+    if (Nf>=3) sigmaij[Nf+3][Nf-3] = sigmaij[Nf+2][Nf-2];
+    if (Nf>=5) sigmaij[Nf+5][Nf-5] = sigmaij[Nf+2][Nf-2];
+    sigmaij[Nf-2][Nf+2] = sigmaij[Nf+2][Nf-2];
+    if (Nf>=3) sigmaij[Nf-3][Nf+3] = sigmaij[Nf+2][Nf-2];
+    if (Nf>=5) sigmaij[Nf-5][Nf+5] = sigmaij[Nf+2][Nf-2];
+// Gluons
+    sigmaij[Nf][Nf] = BOX;
 
 }
 
@@ -104,24 +70,15 @@ double ggBoxdiphotoncalc(double costheta, int verbosity) {
 // Defined in terms of costheta, the cosine of the azimuthal angle of photon 1 in the partonic CM frame,
 // which is just a convenient way of dimensionlessly parametrizing the Mandelstams invariants, since t/s = -1 + costheta.
     double s = 0.0, t = 0.0, u = 0.0;
-    s = 1.0;
-    t = -1.0/2.0*(1+costheta);
-    u = -1.0/2.0*(1-costheta);
-    if (verbosity >= 13) {
-	std::cout << "ggboxdiphotoncalc: " << std::endl;
-	std::cout << "s = " << s << std::endl;
-	std::cout << "t = " << t << std::endl;
-	std::cout << "u = " << u << std::endl;
-    }
+    s = 1.;
+    t = -1./2.*(1.+costheta);
+    u = -1./2.*(1.-costheta);
 
     double sumQq2 = 11./9.;
     double pi = k_constants::pi;
 
-    double sumQqto4 = 0.0;
-    sumQqto4 = sumQq2*sumQq2;
-    double av = 0.0, logmsot = 0.0, logmsou = 0.0, logtou = 0.0,
-    ratiostou = 0.0, ratiosuot = 0.0, ratiotuos = 0.0;
-    av = 1.0/256.0;
+    double sumQqto4 = sumQq2*sumQq2;
+    double logmsot, logmsou, logtou, ratiostou, ratiosuot, ratiotuos;
     logmsot = std::log(-s/t);
     logmsou = std::log(-s/u);
     logtou = std::log(t/u);
@@ -129,14 +86,14 @@ double ggBoxdiphotoncalc(double costheta, int verbosity) {
     ratiosuot = (s*s+u*u)/(t*t);
     ratiotuos = (t*t+u*u)/(s*s);
     double factor = 0.0, Box = 0.0;
-    factor = av*16*2.0/(pi*pi)*(1.0/8.0*((ratiostou*logmsot*logmsot+2.0*(s-t)/u*logmsot)*
+    factor = 1./(4.*pi*pi)*(1.0/8.0*((ratiostou*logmsot*logmsot+2.0*(s-t)/u*logmsot)*
     (ratiostou*logmsot*logmsot+2.0*(s-t)/u*logmsot) + (ratiosuot*logmsou*logmsou+2.0*(s-u)/t*logmsou)*
     (ratiosuot*logmsou*logmsou+2.0*(s-u)/t*logmsou) + (ratiotuos*(logtou*logtou+pi*pi)+2.0*(t-u)/s*logtou)*
     (ratiotuos*(logtou*logtou+pi*pi)+2.0*(t-u)/s*logtou)) +
     1.0/2.0*(ratiostou*logmsot*logmsot+2.0*(s-t)/u*logmsot + ratiosuot*logmsou*logmsou+2.0*(s-u)/t*logmsou + ratiotuos*(logtou*logtou+pi*pi)+2.0*(t-u)/s*logtou)
     + pi*pi/2*((ratiostou*logmsot+(s-t)/u)*(ratiostou*logmsot+(s-t)/u) + (ratiosuot*logmsou+(s-u)/t)*(ratiosuot*logmsou+(s-u)/t))+4.0);
 
-    Box = 1.0/2.0*4*sumQqto4*(2.0*pi)*(2.0*pi)*(2.0*pi)*(2.0*pi)*factor; //Factor 1/2 for identical particles
+    Box = sumQqto4*factor;
 
     return Box;
 }
@@ -420,176 +377,4 @@ double G1smitad(double u,double t,double s,double muR2, int verbosity) {
       +(32.0*X*X*X+8.0*X*X*Y*Y+80.0*pi*pi*X+32.0*X*Y*pi*pi+8.0*Y*Y*X+8.0*Y*Y*Y*Y+32.0*Y*Y*pi*pi
         -32.0*Y*Y-4.0-56.0*Y+24.0*pi*pi);
     return G1sm;
-}
-
-double Li4(double x){
-    double Li4 = 0.0;
-    double Z3 = k_constants::zeta3;
-    double Z4 = k_constants::zeta4;
-    double pi = k_constants::pi;
-    double PolyLog2m2 = k_constants::PolyLog2m2;
-    double PolyLog3m2 = k_constants::PolyLog3m2;
-    double PolyLog4m2 = k_constants::PolyLog4m2;
-
-    if(x<=-2.0){
-      Li4 = 1.0/360.0*(-60.0/x*(6.0+ 6.0/625.0/(x*x*x*x) + 3.0/128.0/(x*x*x) + 2.0/27.0/(x*x) + 3.0/8.0/x )-7.0*pi*pi*pi*pi
-        - 30.0*pi*pi*std::log(-x)*std::log(-x) - 15.0*std::log(-x)*std::log(-x)*std::log(-x)*std::log(-x));
-    }
-    else if(x>-2.0 && x<-1.0){
-      Li4 = (std::pow((2.0 + x),10.0)* (-25437292.0 + 71241525.0* std::log(3.0) + 62364492.0* PolyLog2m2 - 22044960.0 *PolyLog3m2))/225740390400.0
-        + (std::pow((2.0 + x),9.0)* (-2404252.0 + 7176033.0* std::log(3.0) + 6657228.0* PolyLog2m2 - 2449440.0* PolyLog3m2))/11287019520.0
-        + (std::pow((2.0 + x),8.0)* (-82123.0 + 265923.0* std::log(3.0) + 264627.0* PolyLog2m2 - 102060.0* PolyLog3m2))/209018880.0
-        + (std::pow((2.0 + x),6.0)* (-1438.0 + 6075.0* std::log(3.0) + 7398.0* PolyLog2m2 - 3240.0* PolyLog3m2))/1244160.0
-        + (std::pow((2.0 + x),5.0)* (-58.0 + 315.0* std::log(3.0) + 450.0* PolyLog2m2 - 216.0* PolyLog3m2))/34560.0
-        + (std::pow((2.0 + x),4.0)* (-2.0 + 18.0* std::log(3) + 33.0* PolyLog2m2 - 18.0* PolyLog3m2))/1152.0
-        + 1.0/48.0 *std::pow((2.0 + x),3.0)* (std::log(3.0) + 3.0* PolyLog2m2 - 2.0* PolyLog3m2) + 1.0/8.0* std::pow((2.0 + x),2.0)* (PolyLog2m2 - PolyLog3m2)
-        - 1.0/2.0* (2.0 + x)* PolyLog3m2 + (std::pow((2.0 + x),7.0)* (10962.0* std::log(3.0) + 11907.0* PolyLog2m2 - 5.0* (607.0 + 972.0* PolyLog3m2)))/4354560.0 + PolyLog4m2;
-    }
-    else if(x<=0.7 && x>=-1.0){
-      Li4 = x+x*x/16+std::pow(x,3.0)/81+std::pow(x,4.0)/256+std::pow(x,5.0)/625
-      +std::pow(x,6.0)/1296+std::pow(x,7.0)/2401+std::pow(x,8.0)/4096+std::pow(x,9.0)/6561
-      +std::pow(x,10.0)/10000+std::pow(x,11.0)/14641+std::pow(x,12.0)/20736+std::pow(x,13.0)/28561
-      +std::pow(x,14.0)/38416+std::pow(x,15.0)/50625+std::pow(x,16.0)/65536+std::pow(x,17.0)/83521
-      +std::pow(x,18.0)/104976+std::pow(x,19.0)/130321+std::pow(x,20.0)/160000+std::pow(x,21.0)/194481
-      +std::pow(x,22.0)/234256+std::pow(x,23.0)/279841+std::pow(x,24.0)/331776+std::pow(x,25.0)/390625
-      +std::pow(x,26.0)/456976+std::pow(x,27.0)/531441+std::pow(x,28.0)/614656+std::pow(x,29.0)/707281+std::pow(x,30.0)/810000
-      +std::pow(x,31.0)/923521+std::pow(x,32.0)/1048576+std::pow(x,33.0)/1185921+std::pow(x,34.0)/1336336
-      +std::pow(x,35.0)/1500625+std::pow(x,36.)/1679616+std::pow(x,37.0)/1874161+std::pow(x,38.0)/2085136
-      +std::pow(x,39.0)/2313441+std::pow(x,40.0)/2560000+std::pow(x,41.0)/2825761+std::pow(x,42.0)/3111696
-      +std::pow(x,43.0)/3418801+std::pow(x,44.0)/3748096+std::pow(x,45.0)/4100625+std::pow(x,46.0)/4477456
-      +std::pow(x,47.0)/4879681+std::pow(x,48.0)/5308416+std::pow(x,49.0)/5764801+std::pow(x,50.0)/6250000;
-    }
-    else if(x<1.0 && x>0.7){
-      Li4 = 1.0/457228800.0*(5080320.0*pi*pi*pi*pi-std::pow((-1.0+x),3.0)
-      *(-1381393255.0+x* (4840853127.0+x* (-9435621561.0+x* (11568105449.0
-        +x* (-9128211801.0+x* (4518682089.0+x* (-1281356743.0+159233895* x)))))))
-        +1512.0*pi*pi* std::pow((-1.0+x),2.0)* (177133.0+x* (-617934.0
-          +x* (1341449.0+x* (-1931968.0+x* (1883165.0+x* (-1233718.0+x* (522099.0+2.0* x* (-64642.0+7129.0* x))))))))
-          +2520.0* std::pow((-1.0+x),3.0)* (-420475.0+x* (1615443.0+x* (-3282009.0+x* (4114961.0+x *(-3292089.0
-            +x* (1644801.0+x *(-469507.0+58635.0* x)))))))* std::log(1.0-x)-181440.0* (-1.0+x)* (-7381.0
-              +x* (17819.0+x* (-38881.0+x* (61919.0+x* (-70381.0+x* (56627.0
-                +x* (-31573.0+7.0* x* (1661.0+4.0* x* (-91.0+9.0* x)))))))))* Z3);
-    }
-    else if(x==1){
-      Li4 = Z4;
-    }
-    else {
-      std::cout<< "Bad value of x in Li4 - " << x << std::endl;
-      Li4 = 0.0;
-    }
-
-// Only Li4 receives values of Z, Li2 and Li3 are only evaluated in x and y,
-// their arguments are bounded between 0 and 1 so they do not throw errors
-
-    return Li4;
-}
-
-
-double Li3(double x) {
-    double Li3 = 0.0;
-    double xx = 0.0;
-    double Z2 = k_constants::zeta2;
-
-    if (x>1.0 && x < 1.0+1e-8)	{
-      xx = 1.0;
-    }
-    else {
-      xx = x;
-    }
-
-    if (xx > 0 && xx <1.0) {
-      Li3 = Li3fn(xx);
-    }
-    else if (xx>-1.0 && xx<0.0) {
-      Li3 = -Li3fn(-xx) + Li3fn(xx*xx)/4.0;
-    }
-    else if (xx < -1.0) {
-      Li3 = -Li3fn(1.0/xx) + Li3fn(1.0/(xx*xx))/4.0 + Z2*std::log(-1.0/xx)
-        + std::log(-1.0/xx)*std::log(-1.0/xx)*std::log(-1.0/xx)/6.0;
-    }
-    else {
-      std::cout << "Wrong argument in Li3" << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    return Li3;
-}
-
-double Li3fn(double xx) {
-    double Li3_0 = 0.0, yy = 0.0;
-    double Z2 = k_constants::zeta2;
-    double Z3 = k_constants::zeta3;
-
-    if (xx <0.0 || xx>1.0) {
-      std::cout << "wrong argument in Li3fn" << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    else if (xx < 0.35) {
-      yy = std::log(1.0-xx);
-      Li3_0 = -yy - (3*yy*yy)/8.0 - (17*yy*yy*yy)/216.0 - (5*yy*yy*yy*yy)/576.0
-        - (7*yy*yy*yy*yy*yy)/54000.0 + (7*yy*yy*yy*yy*yy*yy)/86400.0 + 19*yy*yy*yy*yy*yy*yy*yy/5556600.0
-        - yy*yy*yy*yy*yy*yy*yy*yy/752640.0 - 11*yy*yy*yy*yy*yy*yy*yy*yy*yy/127008000.0
-        + 11*yy*yy*yy*yy*yy*yy*yy*yy*yy*yy/435456000.0;
-    }
-    else if (xx>0.35 && xx<1.0) {
-      yy = std::log(xx);
-      Li3_0 = Z3 + Z2*yy - (yy*yy*yy)/12.0 - (yy*yy*yy*yy)/288.0 + (yy*yy*yy*yy*yy*yy)/86400.0
-        - (yy*yy*yy*yy*yy*yy*yy*yy)/10160640.0 + (yy*yy*yy*yy*yy*yy*yy*yy*yy*yy)/870912000.0
-        + (yy*yy)/4.0*(3.0-2.0*std::log(-yy));
-    }
-    else if (xx == 1.0) {
-      Li3_0 = Z3;
-    }
-    return Li3_0;
-}
-
-
-double Li2 (double x) {
-    double Li2 = 0.0, xx =0.0;
-    double Z2 = k_constants::zeta2;
-
-    if (x > 1.0 && x < 1.0+1e-8) {
-      xx = 1.0;
-    }
-    else {
-      xx = x;
-    }
-
-    if (xx>0 && x<1.0) {
-      Li2 = Li2fn(xx);
-    }
-    else if (xx>-1.0 && xx<0.0) {
-      Li2 = -Li2fn(-xx) + Li2fn(xx*xx)/2.0;
-    }
-    else if (xx < -1.0) {
-      Li2 = Li2fn(-1.0/xx) - Li2fn(1.0/(xx*xx))/2.0 - Z2 - std::log(-1.0/xx)*std::log(-1.0/xx)/2.0;
-    }
-    else {
-      std::cout << "Wrong argument in Li2" << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    return Li2;
-}
-
-double Li2fn (double xx) {
-    double Li2_0 = 0.0, yy = 0.0;
-    double Z2 = k_constants::zeta2;
-
-    if (xx < 0.0 || xx > 1.0) {
-      std::cout << "Wrong argument in Z2 in Li2fn" << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    else if (xx < 0.35) {
-      yy = std::log(1.0-xx);
-      Li2_0 = -yy - (yy*yy)/4.0 - (yy*yy*yy)/36.0 + (yy*yy*yy*yy*yy)/3600.0
-        - (yy*yy*yy*yy*yy*yy*yy)/211680.0 + (yy*yy*yy*yy*yy*yy*yy*yy*yy)/10886400.0;
-    }
-    else if (xx>0.35 && xx<1.0) {
-      yy = std::log(xx);
-      Li2_0 = Z2 - (yy*yy)/4.0 - (yy*yy*yy)/72.0 + (yy*yy*yy*yy*yy)/14400.0 - (yy*yy*yy*yy*yy*yy*yy)/1270080.0
-        + (yy*yy*yy*yy*yy*yy*yy*yy*yy)/87091200.0 + yy*(1.0-std::log(-yy));
-    }
-    else if (xx == 1.0) {
-      Li2_0 = Z2;
-    }
-    return Li2_0;
 }
