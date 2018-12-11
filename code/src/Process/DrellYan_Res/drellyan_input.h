@@ -22,7 +22,7 @@ struct drellyan_input{
   double eta1cut, eta2cut;
   double crack1, crack2;
   double Rcut; // relative diphoton separation
-  int DYprocess; //Selection of mediator boson if DY, 1 = W+, 2 = W-, 3 = W+ and W-, 4 = Z only, 5 = Z+gamma
+  int DYprocess; //Selection of mediator boson if DY, 1 = W+, 2 = W-, 3 = W+ and W-, 4 = Z only, 5 = Z+gamma, 6 = Z prime+Z+gamma
   int DYnarrowwidthapprox; //Use narrow width approx for DY so q = mw/mz
   double pTecut, pTmisscut;
   double etaecut;
@@ -38,6 +38,8 @@ struct drellyan_input{
   double gw;
   double sw2;
   double cw2;
+  double mzp, zpw; // Z prime mass and width
+  double gzp; // Z prime coupling
 
 };
 
