@@ -61,6 +61,9 @@ void drellyan_ReadInput(std::string filename, drellyan_input& drellyan_in){
       set_def<double>(default_reals,"mw",80.398);
       read_data<double>(input_status,default_reals,line,"mw",drellyan_in.mw);
 
+      set_def<double>(default_reals,"mzp",10000); // Z prime mass - set as 10 TeV as default
+      read_data<double>(input_status,default_reals,line,"mzp",drellyan_in.mzp);
+
       set_def<double>(default_reals,"crack1",1.0);
       read_data<double>(input_status,default_reals,line,"crack1",drellyan_in.crack1); //general cut
       set_def<double>(default_reals,"crack2",1.0);
@@ -127,7 +130,7 @@ void drellyan_preproc(drellyan_input& drellyan_in){
     PDG_num[3]=12;
     drellyan_in.res_1.tot_em_charge=-1;
   }
-  if(drellyan_in.DYprocess==4 || drellyan_in.DYprocess==5){
+  if(drellyan_in.DYprocess==4 || drellyan_in.DYprocess==5 || drellyan_in.DYprocess==6){
     PDG_num[2]=11;
     PDG_num[3]=-11;
   }
@@ -139,6 +142,7 @@ void drellyan_preproc(drellyan_input& drellyan_in){
 
   double mw = drellyan_in.mw;
   double mz = drellyan_in.mz;
+  double mzp = drellyan_in.mzp; // Z prime mass
   double gf = drellyan_in.gf;
   double pi = k_constants::pi;
 
@@ -154,10 +158,12 @@ void drellyan_preproc(drellyan_input& drellyan_in){
   std::cout << "alpha_QED = " << drellyan_in.res_1.alpha_QED << std::endl;
   drellyan_in.gz = std::sqrt(std::sqrt(2.0)*gf*mz*mz);
   drellyan_in.gw = std::sqrt(4.0*std::sqrt(2.0)*gf*mw*mw);
+  drellyan_in.gzp = std::sqrt(std::sqrt(2.0)*gf*mzp*mzp); // Set Z prime coupling using same form as Z coupling 
 
 // W and Z widths -- hardcoded for now
   drellyan_in.zw = 2.4952;
   drellyan_in.ww = 2.141;
+  drellyan_in.zpw = 0.03*mzp; // Set default Z prime width to 3 percent of Z prime mass
 
 //CKM matrix (for W boson in DY), from 0903.2120 -- hardcoded for now
   drellyan_in.Vud = 0.97419;
