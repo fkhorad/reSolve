@@ -1,5 +1,0 @@
-# Keep these folders even though they're 'empty' (--> they only contain ignored files) #
-########################################################################################
-
-code/lib/
-code/obj/
