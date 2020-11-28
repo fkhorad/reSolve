@@ -1,0 +1,16 @@
+
+# VSCODE files #
+################
+code/src/.vscode/
+
+# Compiled source #
+###################
+*.o
+
+# Main Exectuable #
+###################
+*.out
+
+# Libraries #
+###################
+*.a

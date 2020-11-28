@@ -1,0 +1,72 @@
+# Here is a detailed input file example
+# Every line beginning with a hash "# are considered as comments and ignored in reading
+# Parameter valued can be put in ANY ORDER, using the syntax
+# PARAMETER_NAME: PARAMETER_VALUE
+#
+# ANY parameter can be omitted: this results in the program assigning a default value and printing a WARNING on screen
+
+# "process: 2" means Drell-Yan. An additional flag "DYprocess" sets the subprocess:
+# 1 = W+, 2 = W-, 3 = W+ or W-, 4 = Z only, 5 = gamma* + Z, 6 = Z +gamma* + Zp
+process: 2
+DYprocess: 5
+#
+# The following lines specify that resummation is turned off, that we are at LO and the CM energy (in GeV)
+resum_flag: 0
+order: 1
+CT_flag: 1
+CM_energy: 8000.
+#
+# Hadron species for beam 1 and 2 (1=proton  -1=antiproton)
+ih1: 1
+ih2: 1
+#
+# Scales (in GeV) -- the flag means they are dynamic == invariant mass and the other number is a multiplicative factor
+muR_flag: 0
+muF_flag: 0
+mu_R: 91.1876
+mu_F: 91.1876
+mu_S: 91.1876
+# PDFs
+#
+pdf_setname: MSTW2008nnlo68cl
+lha_imem: 0
+#
+# Output directory (must have been previously created and empty)
+workdir: yZ_CT_test_dyqt/
+# Integration parameters
+maxeval: 10000
+nstart: 1000
+nincrease: 1000
+seed: 0
+# Integrator: 1 = native Vegas, 2 = CUBA
+integrator_flag: 2
+# Event format -- 2 is LHE
+save_events: 1
+#
+# Ranges for integration in invariant mass and pseudorapidity
+QQ_Min: 91.1876
+QQ_Max: 92
+QT_Min: 0.5
+QT_Max: 200.
+eta_Min: -2.5
+eta_Max: 2.5
+# Flag for AFB calculation
+AFB_flag: 0
+#
+# Acceptance cuts
+pT1cut: 20.
+pT2cut: 20.
+eta1cut: 2.4
+eta2cut: 2.4
+#
+# General Parameters
+gevm2topb: 389379660.
+#
+# Z parameters
+mz: 91.19
+zw: 2.5
+#
+# Histograms to be done after integration ends. Syntax:
+# histo: OBSERVABLE_NAME #bins #min #max
+#histo: qq 100 70. 110.
+histo: qT 0 0.5 1.5 4.5 5.5 8.5 9.5 12.5 13.5 16.5 17.5 20.5 21.5 24.5 25.5 28.5 29.5 32.5 33.5 36.5 37.5 40.5 41.5 44.5 45.5 48.5 49.5 52.5 53.5 56.5 57.5 60.5 61.5 64.5 65.5 68.5 69.5 72.5 73.5 76.5 77.5 80.5 81.5 84.5 85.5 88.5 89.5 92.5 93.5 96.5 97.5 100.5

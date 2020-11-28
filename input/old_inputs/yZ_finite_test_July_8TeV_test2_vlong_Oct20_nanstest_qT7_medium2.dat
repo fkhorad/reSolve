@@ -1,0 +1,73 @@
+# Here is a detailed input file example
+# Every line beginning with a hash "# are considered as comments and ignored in reading
+# Parameter valued can be put in ANY ORDER, using the syntax
+# PARAMETER_NAME: PARAMETER_VALUE
+#
+# ANY parameter can be omitted: this results in the program assigning a default value and printing a WARNING on screen
+
+# "process: 2" means Drell-Yan. An additional flag "DYprocess" sets the subprocess:
+# 1 = W+, 2 = W-, 3 = W+ or W-, 4 = Z only, 5 = gamma* + Z, 6 = Z +gamma* + Zp
+process: 2
+DYprocess: 5
+#
+# The following lines specify that resummation is turned off, that we are at LO and the CM energy (in GeV)
+resum_flag: 0
+order: 1
+CT_flag: 0
+CM_energy: 8000.
+#
+# Hadron species for beam 1 and 2 (1=proton  -1=antiproton)
+ih1: 1
+ih2: 1
+#
+# Scales (in GeV) -- the flag means they are dynamic == invariant mass and the other number is a multiplicative factor
+muR_flag: 1
+muF_flag: 1
+mu_R: 1.
+mu_F: 1.
+mu_S: 1.
+# PDFs
+#
+pdf_setname: CT14nnlo
+lha_imem: 0
+#
+# Output directory (must have been previously created and empty)
+workdir: yZ_finite_test_July_8TeV_test2_vlong_Oct20_nanstest_qT7_medium2/
+# Integration parameters
+maxeval: 1000000
+nstart: 10000
+nincrease: 10000
+seed: -1
+# Integrator: 1 = native Vegas, 2 = CUBA
+integrator_flag: 1
+# Event format -- 2 is LHE
+save_events: 1
+#
+# Ranges for integration in invariant mass and pseudorapidity
+QQ_Min: 0.01
+QQ_Max: 100.5
+QT_Min: 6.99
+QT_Max: 7.01
+eta_Min: -10
+eta_Max: 10
+# Flag for AFB calculation
+AFB_flag: 0
+#
+# Acceptance cuts
+pT1cut: 0.
+pT2cut: 0.
+eta1cut: 1000.
+eta2cut: 1000.
+#
+# General Parameters
+gevm2topb: 389379660.
+#
+# Z parameters
+mz: 91.19
+zw: 2.5
+#
+# Histograms to be done after integration ends. Syntax:
+# histo: OBSERVABLE_NAME #bins #min #max
+#histo: qq 100 70. 110.
+#histo: qT 2 0. 4.
+histo: qT 0 6.99 7.01
