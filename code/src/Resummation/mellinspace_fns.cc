@@ -57,9 +57,6 @@ void inv_mel_init(contour_info& contours, std::array<resuDep_N, k_constants::mel
     for (int i = 0; i<17; i++) {
       sum = up[i]+down[i];
       diff = up[i]-down[i];
-      if (verbosity >= 25) {
-        std::cout << up[i] << "       " << down[i] << std::endl;
-      }
       for (int j = 0; j<8; j++) {
 // Initialisation for Inverse Mellin transform integral
         Z = 0.5*(sum + diff*ZS[j]);
@@ -67,12 +64,6 @@ void inv_mel_init(contour_info& contours, std::array<resuDep_N, k_constants::mel
         Np[k] = std::complex<double>(2+cosphi*Z,sinphi*Z);
         Nm[k] = std::complex<double>(2+cosphi*Z,-sinphi*Z);
         k = k+1;
-      }
-    }
-    if (verbosity >= 25) {
-      for (int k = 0; k< m_points; k++) {
-        std::cout << k << " " << Np[k] << " " << Nm[k] << std::endl;
-        std::cout << k << " " << weights[k] << std::endl;
       }
     }
     contours.weights = weights;

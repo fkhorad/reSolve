@@ -1,6 +1,7 @@
 #include "resu_PS.h"
 
 #include "resummation_input.h"
+#include "pdf_interface.h"
 #include "constants.h"
 
 
@@ -30,7 +31,7 @@ void in_state_w_recoil(four_momentum qvec, double sqs, double alpha, four_moment
     qP2 = (qvec[0]+qvec[3])*sqs/2.;
 
     // std::cout << "qP1 = " << qP1 << std::endl;
-    
+
     P1P2 = sqs*sqs/2.;
 
     k1[0] = sqs/2.*(zeta1*M2/(2.*qP1) + kTsq/zeta1*qP1/(M2*P1P2));
@@ -73,16 +74,14 @@ void resu_PS::set(const ResummationInfo& res_1, double q2_in, double eta_in, dou
     mures2 = std::pow(mures,2);
     muf2 = std::pow(muf,2);
 
-    // alphas = alphas_(&mures)/pi;
-    // alphaqf = alphas_(&mur)/(4*pi);
-    //TEMP switch mur and mures as I believe we have it opposite here to how it was previously and could be causing discrepancy
-    alphas = alphas_(&mur)/pi;
-    alphaqf = alphas_(&mures)/(4*pi);
+    alphas = res_1.pdf_res.alphasQ(mur)/pi;
+    alphaqf = res_1.pdf_res.alphasQ(mures)/(4*pi);
     double sqs = res_1.CM_energy;
     x = q2_in/std::pow(sqs,2);
     a = qq/mures;
     double Euler = 0.57721566;
     b0p = 2*std::exp(-Euler)*a;
+// NOTE: 2*std::exp(-Euler) = 1.12292...
 
     int Nf = res_1.Nf;
     H2q.resize(Nf);

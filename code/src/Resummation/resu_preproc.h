@@ -4,9 +4,6 @@
 struct ResummationInfo;
 struct event_dumper_info;
 
-// For pdffit
-class c_mstwpdf;
-extern c_mstwpdf* pdf_tofit;
 
 // For N-indep resummation parameters initialisation
 #include "resu_procindep.h"
@@ -34,8 +31,6 @@ namespace global_fitpars{
 
 
 void resu_preproc(const event_dumper_info&, ResummationInfo&);
-
-void MSTW_init(ResummationInfo& resuminfo);
 
 void pdffit_interface(const event_dumper_info& ev_info, ResummationInfo& resuminfo);
 

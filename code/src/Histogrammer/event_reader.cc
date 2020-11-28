@@ -78,6 +78,7 @@ int read_easy_event(std::string line, std::ifstream& infile, easy_event& event){
         if(outcode == 0){
           event.push_back(std::vector<double>(0));
           line_to_vec(line, event[ii]);
+	  // std::cout << line << std::endl;
           ii++;
         }
         std::getline(infile, line);
@@ -86,13 +87,16 @@ int read_easy_event(std::string line, std::ifstream& infile, easy_event& event){
       } while(line!="");
 
       if(event.size()>=2){
+	// std::cout << "event.size() = " << event.size() << std::endl;
 // The next line should have -2 --> -1 if the randoms line is not present
         int n_particles = event.size()-2;
+	// std::cout << "n_particles = " << n_particles << std::endl;
 // Check the lines
         for(int ii=0; ii<n_particles; ii++){
           if(event[ii].size()!=4) outcode = 2;
         }
         if(event[n_particles+1].size()!=2){
+	  // std::cout << "event[n_particles+1].size() = " << event[n_particles+1].size() << std::endl;
           outcode = 3;
         }
       }

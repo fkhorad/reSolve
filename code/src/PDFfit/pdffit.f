@@ -513,15 +513,16 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
 
 c New routine (2013 - Kora)
-      subroutine writepdfout(filename,xx,muf,energy_sector,pdf_label)
+      subroutine writepdfout(filename,xx,muf,energy_sector,pdf_label,
+     . label_length)
 
       IMPLICIT NONE
 
       include 'pdffit.h'
 
-      character, intent(in) :: filename*50
+      character, intent(in) :: filename*50, pdf_label*50
       double precision, intent(in) :: xx, muf
-      integer, intent(in) :: energy_sector, pdf_label
+      integer, intent(in) :: energy_sector, label_length
 
       integer ii
 
@@ -531,7 +532,7 @@ c New routine (2013 - Kora)
 
       write(21,*) 'x_max: ', xx
       write(21,*) 'mu_F: ', muf
-      write(21,*) 'pdf_label:', pdf_label
+      write(21,*) 'pdf_label: ', pdf_label(1:label_length)
       write(21,*)
 
       write(21,*) 'Parameters:'

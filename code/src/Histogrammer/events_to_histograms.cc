@@ -138,9 +138,9 @@ int events_to_histos_multi_iter(int iter_min, int iter_max, std::string workdir,
 
 
 void update_histogram(histogram& histo, const PSpoint& PS_, double weight){
-  double value;
-  obs_values(histo.get_obs(), PS_, value);
+  double value = 0., modifier = 1.;
+  obs_values(histo.get_obs(), PS_, value, modifier);
   if(weight==weight){  // Naive NaN-guard
-    histo.add_to_histogram(value, weight);
+    histo.add_to_histogram(value, weight*modifier);
   }
 }

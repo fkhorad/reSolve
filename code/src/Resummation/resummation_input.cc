@@ -30,8 +30,12 @@ void resummation_input(std::string filename, ResummationInfo& res_1){
 // Define Initial state (p and pbar currently supported) and PDF set
       set_def<double>(default_reals,"CM_energy",13000.);
       read_data<double>(input_status,default_reals,line,"CM_energy",res_1.CM_energy);
-      set_def<int>(default_ints,"pdf_flag",82);
-      read_data<int>(input_status,default_ints,line,"pdf_flag",res_1.pdf_flag);
+      set_def<int>(default_ints,"lha_flag",1);
+      read_data<int>(input_status,default_ints,line,"lha_flag",res_1.lha_flag);
+      set_def<std::string>(default_strings,"pdf_setname","MSTW2008nnlo68cl");
+      read_data<std::string>(input_status,default_strings,line,"pdf_setname",res_1.pdf_setname);
+      set_def<int>(default_ints,"lha_imem",0);
+      read_data<int>(input_status,default_ints,line,"lha_imem",res_1.lha_imem);
       set_def<int>(default_ints,"ih1",1);
       read_data<int>(input_status,default_ints,line,"ih1",res_1.ih1);
       set_def<int>(default_ints,"ih2",1);
@@ -40,9 +44,11 @@ void resummation_input(std::string filename, ResummationInfo& res_1){
 // Order of calculation
       set_def<int>(default_ints,"order",0);
       read_data<int>(input_status,default_ints,line,"order",res_1.order);
-// resummation on or off
+// resummation & CT on or off
       set_def<int>(default_ints,"resum_flag",1);
       read_data<int>(input_status,default_ints,line,"resum_flag",res_1.resum_flag);
+      set_def<int>(default_ints,"CT_flag",0);
+      read_data<int>(input_status,default_ints,line,"CT_flag",res_1.CT_flag);
 
 // Scales
       set_def<int>(default_ints,"muR_flag",1);
@@ -118,6 +124,36 @@ void resummation_input(std::string filename, ResummationInfo& res_1){
   if(res_1.fitonly==1){
     res_1.resum_flag=1;
     input_status["resum_flag"]=0;
+  }
+  if(input_status["pdf_setname"] == 1){
+    if(res_1.lha_flag==1){
+      if(res_1.order==0){
+        set_def<std::string>(default_strings,"pdf_setname","MSTW2008lo68cl");
+        res_1.pdf_setname="MSTW2008lo68cl";
+      }
+      if(res_1.order==1){
+        set_def<std::string>(default_strings,"pdf_setname","MSTW2008nlo68cl");
+        res_1.pdf_setname="MSTW2008nlo68cl";
+      }
+      if(res_1.order==2){
+        set_def<std::string>(default_strings,"pdf_setname","MSTW2008nnlo68cl");
+        res_1.pdf_setname="MSTW2008nnlo68cl";
+      }
+    }
+    else{
+      if(res_1.order==0){
+        set_def<std::string>(default_strings,"pdf_setname","mstw2008lo");
+        res_1.pdf_setname="mstw2008lo";
+      }
+      if(res_1.order==1){
+        set_def<std::string>(default_strings,"pdf_setname","mstw2008nlo");
+        res_1.pdf_setname="mstw2008nlo";
+      }
+      if(res_1.order==2){
+        set_def<std::string>(default_strings,"pdf_setname","mstw2008nnlo");
+        res_1.pdf_setname="mstw2008nnlo";
+      }
+    }
   }
 
   dump_default_parameters(input_status, default_ints, default_reals, default_strings);

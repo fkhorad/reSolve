@@ -70,6 +70,10 @@ void set_def( std::map<std::string, const type>& defaults,
 
   if(defaults.find(tag) == defaults.end())
     defaults.insert(std::pair<std::string, const type>(tag, value));
+  else{
+    defaults.erase(defaults.find(tag));
+    defaults.insert(std::pair<std::string, const type>(tag, value));
+  }
 
 }
 

@@ -61,8 +61,13 @@ std::complex<double> SpinProdA(const four_momentum& mom1, const four_momentum& m
 
   double mom1P = mom1[0] + mom1[3];
   double mom2P = mom2[0] + mom2[3];
+  // std::cout << "mom1 = " << mom1[0] << " " << mom1[1] << " " << mom1[2] << " " << mom1[3] << std::endl;
+  // std::cout << "mom2 = " << mom2[0] << " " << mom2[1] << " " << mom2[2] << " " << mom2[3] << std::endl;
+  // std::cout << "mom1P = " << mom1P << std::endl;
+  // std::cout << "mom2P = " << mom2P << std::endl;
 
   double prod = mom1P*mom2P;
+  // std::cout << "prod  = " << prod  << std::endl;
 
   if( prod == 0.){
     res = std::complex<double>(std::sqrt(2.*std::abs(LorDot(mom1,mom2))), 0.);
@@ -71,8 +76,11 @@ std::complex<double> SpinProdA(const four_momentum& mom1, const four_momentum& m
   }
   else{
     double fac = 1./std::sqrt(std::abs(prod));
+    // std::cout << "fac   = " << fac   << std::endl;
     double res_R = fac*(mom1[1]*mom2P - mom2[1]*mom1P);
     double res_I = fac*(mom1[2]*mom2P - mom2[2]*mom1P);
+    // std::cout << "res_R  = " << res_R  << std::endl;
+    // std::cout << "res_I  = " << res_I  << std::endl;
     res = std::complex<double>(res_R, res_I);
   }
 

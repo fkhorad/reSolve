@@ -2,8 +2,6 @@
 #include "PostProc.h"
 
 #include "InputPars.h"
-#include "resummation_input.h"
-#include "mstwpdf.h"
 #include "histogrammer.h"
 
 

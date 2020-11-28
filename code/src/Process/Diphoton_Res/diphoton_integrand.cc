@@ -38,7 +38,7 @@ int diphoton_integrand(int ndim, const double x[], double& f, void* userdata, do
 
     double randsjacob = diphoton_ps(x, resuminfo, pp1, resuvars);
 
-    
+
 // CUTS:
     bool cutcheck = false; //i.e not cut
     cutcheck = diph_cuts(diph_in, resuvars.q2, resuvars.qt2, resuvars.eta, resuvars.mures2, &pp1);
@@ -63,8 +63,8 @@ int diphoton_integrand(int ndim, const double x[], double& f, void* userdata, do
       // }
       // std::cout << "resuvars.sigmaij[6][4] = " << resuvars.sigmaij[6][4] << std::endl;
 
-      double s = 2.*pp1.ss(0,1);
-      double t = -2.*pp1.ss(0,2);
+      double s = 2.*pp1.ss(1,2);
+      double t = -2.*pp1.ss(1,3);
       double costheta = 1. + 2.*t/s;
 
       double H1q = 2*H1qdiphoton_DY(costheta, resuminfo->verbosity);
@@ -93,7 +93,7 @@ int diphoton_integrand(int ndim, const double x[], double& f, void* userdata, do
     // std::cout << "q2 = " << resuvars.q2 << std::endl;
     // std::cout << "qt2 = " << resuvars.qt2 << std::endl;
     // std::cout << "eta = " << resuvars.eta << std::endl;
-    
+
     // std::cout << "tempf = " << tempf << std::endl;
     // std::cout << "randsjacob = " << randsjacob << std::endl;
     // std::cout << "f = " << f << std::endl;

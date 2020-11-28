@@ -51,7 +51,7 @@ void PSpoint::set_products(){
       if(SpinProductsA[i][j] == std::complex<double>(0.,0.))
         SpinProductsB[i][j] = 0.;
       else
-        SpinProductsB[i][j] = - DotProducts[i][j]/SpinProductsA[i][j];
+        SpinProductsB[i][j] = - 2.0*DotProducts[i][j]/SpinProductsA[i][j];
     };
   };
 
@@ -79,16 +79,25 @@ four_momentum PSpoint::mom(int i) const{
   four_momentum res = momenta.at(i);
   return res;
 };
+// Readers of momenta and spinor products; allow negative indices to account for crossings.
+// TAKE NOTICE OF THE OFFSET!
 double PSpoint::ss(int i, int j) const{
-  double res = DotProducts.at(i).at(j);
+  double res = DotProducts.at(std::abs(i)-1).at(std::abs(j)-1);
+  if(i<0) res*=-1.;
+  if(j<0) res*=-1.;
   return res;
 };
 std::complex<double> PSpoint::sa(int i, int j) const{
-  std::complex<double> res = SpinProductsA.at(i).at(j);
+  std::complex<double> res = SpinProductsA.at(std::abs(i)-1).at(std::abs(j)-1);
+  // std::cout << "res = " << std::real(res) << "+i*" << std::imag(res) << std::endl;
+// Choose spinors phases so that i> spinors are unchanged upon crossing, while i] change sign.
   return res;
 };
 std::complex<double> PSpoint::sb(int i, int j) const{
-  std::complex<double> res = SpinProductsB.at(i).at(j);
+  std::complex<double> res = SpinProductsB.at(std::abs(i)-1).at(std::abs(j)-1);
+// Choose spinors phases so that i> spinors are unchanged upon crossing, while i] change sign.
+  if(i<0) res*=-1.;
+  if(j<0) res*=-1.;
   return res;
 };
 
@@ -153,6 +162,32 @@ void set_PS_fromfile(const char* filename, PSpoint& PS){
 
 };
 
+// void set_PS_fromfile_jets(const char* filename, PSpoint& PS){
+
+//     std::fstream myfile(filename, std::ios_base::in);
+
+//     double aa1;
+//     double grid[50];
+//     int ii = 0;
+
+//     while (myfile >> aa1)
+//     {
+//         grid[ii]=aa1; ii++;
+//     }
+
+//     int dim = ii/5; //divide 5 now as 5 particles per event not 4 as also jet
+
+//     if (dim > 0){
+
+//       PS.set_dim(dim);
+//       for(int jj=0; jj<dim; jj++){
+//         four_momentum mom;
+//         mom[0]=grid[4*jj+3]; mom[1]=grid[4*jj+0]; mom[2]=grid[4*jj+1]; mom[3]=grid[4*jj+2];
+//         PS.set_mom(ii, mom);
+//       }
+//     }
+
+// };
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -179,7 +214,7 @@ void set_PS_twobody(double costheta, double phi, const four_momentum P_in, doubl
 
   // std::cout << "qq1 = " << qq1[0] << " " << qq1[1] << " " << qq1[2] << " " << qq1[3] << std::endl;
   // std::cout << "qq2 = " << qq2[0] << " " << qq2[1] << " " << qq2[2] << " " << qq2[3] << std::endl;
-  
+
 // Boost them to original frame
   std::vector<four_momentum> lor1 = SetBoost(P_in, false);
   four_momentum mom_1 = LorDot(lor1, qq1);
@@ -191,12 +226,12 @@ void set_PS_twobody(double costheta, double phi, const four_momentum P_in, doubl
   // std::cout << lor1[2][0] << " " << lor1[2][1] << " " << lor1[2][2] << " " << lor1[2][3] << std::endl;
   // std::cout << lor1[3][0] << " " << lor1[3][1] << " " << lor1[3][2] << " " << lor1[3][3] << std::endl;
 
-  
+
   // std::cout << "mom_1 = " << mom_1[0] << " " << mom_1[1] << " " << mom_1[2] << " " << mom_1[3] << std::endl;
   // std::cout << "mom_2 = " << mom_2[0] << " " << mom_2[1] << " " << mom_2[2] << " " << mom_2[3] << std::endl;
   // std::cout << "mom_1.mom_1 = " << LorDot(mom_1,mom_1) << std::endl;
   // std::cout << "mom_2.mom_2 = " << LorDot(mom_2,mom_2) << std::endl;
-    
+
 
 // Transfer them to the PS object
   PS.add_mom(mom_1);

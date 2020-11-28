@@ -5,7 +5,7 @@
 #include "lorentz.h"
 
 
-int obs_values(std::string obs, const PSpoint& PS_, double& value){
+int obs_values(std::string obs, const PSpoint& PS_, double& value, double& modifier){
   int return_code = 0;
 
   if(obs=="qT") {
@@ -30,6 +30,10 @@ int obs_values(std::string obs, const PSpoint& PS_, double& value){
   }
   else if (obs=="pTmax") {
     value = pTmax_obs(PS_);
+     // std::cout << "making pTmax histogram" << std::endl;
+  }
+  else if (obs=="A_FB_diff") {
+    A_FB1_obs(PS_, value, modifier);
      // std::cout << "making pTmax histogram" << std::endl;
   }
   else{
@@ -111,4 +115,14 @@ double pTmax_obs(const PSpoint& PS_){
     pTmaxsq = qT1sq;
 
   return std::sqrt(pTmaxsq);
+}
+
+void A_FB1_obs(const PSpoint& PS_, double& value, double& modifier){
+
+  value = qq_obs(PS_);
+  double rate = PS_.ss(1,3)/PS_.mom(0)[0]/PS_.mom(2)[0];
+  if(rate > 1.) modifier = -1.;
+  double eta = eta_obs(PS_);
+  if(eta < 0) modifier = -modifier;
+
 }

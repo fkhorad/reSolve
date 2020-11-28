@@ -46,6 +46,7 @@ private:
 };
 
 void set_PS_fromfile(const char* filename, PSpoint&);
+/* void set_PS_fromfile_jets(const char* filename, PSpoint&); */
 
 ////////////////////////////////////////////////////////////////
 

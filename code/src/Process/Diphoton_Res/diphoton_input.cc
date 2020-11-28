@@ -13,13 +13,13 @@ void diphoton_setup(std::string filename, const event_dumper_info& event_info, d
   diph_in.event_info = event_info;
   diphoton_ReadInput(filename, diph_in);
 
-// PreProcessing - 1
+// PreProcessing - 1 (resummation)
   resu_preproc(event_info, diph_in.res_1);
+
+// PreProcessing - 2 (diphoton-specific)
   diph_in.res_1.qq_order = diph_in.res_1.order;
   diph_in.res_1.gg_order = diph_in.res_1.order-2;
   diph_in.res_1.pcF = 0;
-
-// PreProcessing - 2: Load info in event object
   diph_in.ndim = 6;
 //
   int npart = 4;

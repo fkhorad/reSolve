@@ -11,13 +11,17 @@
 struct resu_PS;
 struct ResummationInfo;
 struct pdffit;
-class c_mstwpdf;
+class PDF_res_interface;
 
 double xsection(const resu_PS&, ResummationInfo*);
 
-void k_getMSTWpdf(c_mstwpdf* PDF_, double* pdf1, int Nf, int ih1, double x1, double muf);
+double xsection_nlojet(const resu_PS&, ResummationInfo*, double ss_hat, double etaa_hat);
+
+void k_getPDF(PDF_res_interface& PDF_, double* pdf1, int Nf, int ih1, double x1, double muf);
 
 double xsection2(const resu_PS&, ResummationInfo*);
+
+double xsection2_nlojet(const resu_PS&, ResummationInfo*, double ss_hat, double etaa_hat);
 
 void distributions(double x, double* FX, int Nf, int ih, int ifit1, int ifit2, pdffit& pdfbeamfit, double aapow);
 

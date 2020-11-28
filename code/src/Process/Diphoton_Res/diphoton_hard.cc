@@ -18,9 +18,9 @@ void sigmaijdiphotoncalc(diphoton_input* diph_in, PSpoint& PS, std::vector<std::
     double Qd = -1./3.;
     double pi = k_constants::pi;
 
-    double s = 2.*PS.ss(0,1);
-    double t = -2.*PS.ss(0,2);
-    double u = -2.*PS.ss(1,2);
+    double s = 2.*PS.ss(1,2);
+    double t = -2.*PS.ss(1,3);
+    double u = -2.*PS.ss(2,3);
     double costheta = 1. + 2.*t/s;
 
     double BOX = 0.;
@@ -122,9 +122,9 @@ double H1diphotoncalc(PSpoint* PS, double Cf, int verbosity) {
 // alpha_s normalization is alpha_S/2Pi (!!). See 1311.1654. H1Gian in old code.
     double H1 = 0.;
 
-    double s = 2.*PS->ss(0,1);
-    double t = -2.*PS->ss(0,2);
-    double u = -2.*PS->ss(1,2);
+    double s = 2.*PS->ss(1,2);
+    double t = -2.*PS->ss(1,3);
+    double u = -2.*PS->ss(2,3);
     double pi = k_constants::pi;
     double ve = 0.0;
     ve = -u/s;
@@ -180,9 +180,9 @@ double H2stqqdiphotoncalc(PSpoint* PS, int quark, double Cf, int Nf, int Nc, int
     double muR2 = 0.0;
     double H2 = 0.0;
     double QQ[6], Qsqd[6];
-    double s = 2.*PS->ss(0,1);
-    double t = -2.*PS->ss(0,2);
-    double u = -2.*PS->ss(1,2);
+    double s = 2.*PS->ss(1,2);
+    double t = -2.*PS->ss(1,3);
+    double u = -2.*PS->ss(2,3);
     double ve = 0.0, ALO = 0.0;
     double Qu = 2./3.;
     double Qd = -1./3.;

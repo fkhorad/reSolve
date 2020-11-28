@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "mstwpdf.h"
+#include "pdf_interface.h"
 
 
 extern "C" {
@@ -12,7 +12,7 @@ extern "C" {
   void fiteador_(double& xtauf, double& muf2, int& energy_sector, int& pdf_label, int& aa_in);
 
   void writepdfout_(const char* filename, double& xx, double& muf, int& energy_sector,
-                    int& pdf_label);
+                    const char* pdf_label, int& label_length);
 
   void partons_cc_(double& sq2, double& sx,
                  double& fx0,
@@ -24,6 +24,6 @@ extern "C" {
 
 
 
-extern c_mstwpdf* pdf_tofit;
+extern PDF_res_interface* pdf_tofit;
 
 #endif

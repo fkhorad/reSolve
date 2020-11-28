@@ -15,6 +15,7 @@
 // Generic Resummation
 #include "resummation_input.h"
 #include "resu_preproc.h"
+#include "pdf_interface.h"
 // Diphoton
 #include "diphoton_input.h"
 #include "diphoton_integrand.h"
@@ -23,8 +24,8 @@
 #include "drellyan_integrand.h"
 
 
-extern std::ifstream debbie;
-std::ifstream debbie("debbie.dat");
+//extern std::ifstream debbie;
+//std::ifstream debbie("debbie.dat");
 
 
 // THE MAIN BODY: SELECTION, INITIALISATION AND EXECUTION OF PROCESSES
@@ -41,7 +42,6 @@ void MonteCarlo(const InputPars& info) {
     resuminfo.fitonly = 1;
     resummation_input(info.filename_0, resuminfo);
     resu_preproc(info.event_info, resuminfo);
-    delete resuminfo.pdf; // delete MSTW08 PDF object
   }
 
 // p(b)-p(b) --> Diphoton + X + qT resummation: process=1
@@ -61,7 +61,6 @@ void MonteCarlo(const InputPars& info) {
         integrand_t int_cuba = (integrand_t) diphoton_integrand_cuba;
         cuba_vegas_call(info, data.ndim, 1, int_cuba, &data);
       }
-      delete data.res_1.pdf; // delete MSTW08 PDF object
     }
   }
 
@@ -83,13 +82,12 @@ void MonteCarlo(const InputPars& info) {
         cuba_vegas_call(info, data.ndim, 1, int_cuba, &data);
       }
     }
-    delete data.res_1.pdf; // delete MSTW08 PDF object
 
   }
 
   else{}
 
 
-  debbie.close();
+//  debbie.close();
 
 }

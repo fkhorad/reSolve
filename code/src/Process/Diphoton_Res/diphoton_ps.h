@@ -9,11 +9,6 @@ struct resu_PS;
 struct ResummationInfo;
 
 
-extern "C" {
-  double alphas_(double *MUR);
-}
-
-
 double diphoton_ps(const double x[], ResummationInfo*, PSpoint&, resu_PS&);
 
 
