@@ -14,6 +14,8 @@ Read PROCESS-INDEPENDENT input (like basic functioning flags, process choice, pa
 */
   InputPars input_basic;
   std::cout << "Reading input " << std::endl;
+  int puppa = argc;
+  
   input_basic.ReadInput(argc, argv);
 
 // Process-independent setup & preprocessing

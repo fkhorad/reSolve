@@ -24,10 +24,93 @@ double DYjet_ps(const double x[], drellyan_input* drellyan_in, drellyan_amplitud
     }
 
 // Assign q2, qt2, eta, thetaCM, phiCM with randoms from vegas
-    double q2, qt2, eta, thetaCM, c_thetaCM, phiCM;
+    double q2, qt2 = 0., qt, eta, thetaCM, c_thetaCM, phiCM;
     double randsjacob = 1.;
     double CM_energy = drellyan_in->res_1.CM_energy;
 
+    double QQ_Min = std::max(0., drellyan_in->res_1.QQ_Min);
+    double QQ_Max = std::min(CM_energy, drellyan_in->res_1.QQ_Max);
+    
+    // Start by setting q2 anywhere in the allowed energy range
+    double q2 = QQ_Min*QQ_Min + x[0]*(QQ_Max*QQ_Max - QQ_Min*QQ_Min);
+    randsjacob = randsjacob*(QQ_Max*QQ_Max - QQ_Min*QQ_Min);
+
+    //Next set qt^2, can be set anywhere in range 0 to (CM_energy^2-q^2)/(2*CM_energy)
+    double s_had = CM_energy*CM_energy;
+    double QT_Min = std::max(0., drellyan_in->res_1.QT_Min);
+    double QT_kinmax = (s_had - q2)/(2*CM_energy);
+    double QT_Max = std::min(drellyan_in->res_1.QT_Max, QT_kinmax);
+    if (QT_Min > QT_Max) {
+      randsjacob = 0;
+    } else {
+      qt2 = std::pow(QT_Min,2) + x[1]*(std::pow(QT_Max,2) - std::pow(QT_Min,2));
+      randsjacob = randsjacob*(std::pow(QT_Max,2)-std::pow(QT_Min,2));
+      qt = std::sqrt(qt2);
+    }
+
+    // Now set the y of the Z in the lab; actually called "eta" for legacy code reasons
+    double MT2 = q2 + qt2;
+    double MT = std::sqrt(MT2);
+    double K = 1/MT2 *( (s_had - q2)*(s_had - q2)/(4*s_had) - qt2);
+    double y_kinmax = std::log( std::sqrt(K+1) + std::sqrt(K) );
+    double y_max = std::min(y_kinmax, drellyan_in->res_1.eta_Max);
+    double y_min = std::max(-y_kinmax, drellyan_in->res_1.eta_Min);
+
+    if(y_min>y_kinmax){
+      randsjacob = 0.;
+    } else{
+      eta = y_min + x[2]*(y_max - y_min);
+      randsjacob = randsjacob*(y_max - y_min);
+    }
+
+    double sh_min, sh_max, sh1, sh2;
+
+    sh1 = -((std::exp(2*eta)*qt2 + std::sqrt(std::exp(2*eta)*std::pow(-1 + std::exp(2*eta)*q2,2)*(q2 + qt2)))/
+     (std::exp(2*eta)*(-1 + std::exp(2*eta)*(q2 + qt2))));
+    sh2 = (std::exp(2*eta)*qt2 + std::sqrt(std::pow(std::exp(3*eta) - std::exp(eta)*q2,2)*(q2 + qt2)))/
+   (std::exp(2*eta) - q2 - qt2);
+
+    sh_min = max((qt+MT)*(qt+MT) , sh1 );
+    sh_max = min(sh2 , s_had);
+
+    double s_hat = sh_min + x[3]*(sh_max - sh_min);
+    randsjacob = randsjacob*(sh_max - sh_min);
+
+    double K1 = 1/MT2 *( (s_hat - q2)*(s_hat - q2)/(4*s_hat) - qt2);
+    double sign_eta;
+    if(eta!=0) sign_eta = eta/std::abs(eta);
+    else sign_eta = 1.;
+    double yCMP = sign_eta * std::log( std::sqrt(K1+1) + std::sqrt(K1) );
+    if(s_hat < sh1){ // sign of y in the CM may be flipped w.r.t. eta if eta_hat is dominant
+      yCMP = yCMP * std::pow(-1, std::rand());
+    }
+    double eta_hat = eta - yCMP;
+    double x = s_hat/s_had;
+    double x1 = std::sqrt(x)*std::exp(eta_hat);
+    double x2 = std::sqrt(x)*std::exp(-eta_hat);
+
+    thetaCM = pi*x[4]; //thetaCM between 0 and pi
+    c_thetaCM = std::cos(thetaCM);
+    randsjacob = randsjacob*pi*std::sin(thetaCM); // this Jacobian is actually for d(costheta)
+//
+    phiCM = 2*pi*x[5];   //phiCM between 0 and 2pi
+    randsjacob = randsjacob*2*pi;
+
+// azimuthal angle of the qT vector
+    double phisys = 2*pi*x[6];
+    randsjacob = randsjacob*2*pi;
+
+// qvec: 4-momentum of the Z / dilepton system
+    four_momentum qvec;
+    qvec[0] = MT*std::cosh(eta); qvec[1] = std::sqrt(qt2)*std::cos(phisys);
+    qvec[2] = std::sqrt(qt2)*std::sin(phisys); qvec[3] = MT*std::sinh(eta);
+
+    double kjet_plus x1*CM_energy - MT*std::exp(eta);
+    four_momentum k1(4), k2(4), kjet(4);
+    in_state_plus_jet(qvec, CM_energy, kjet_plus, k1, k2, kjet);
+
+
+/*
     //Trying a different order of integration variables for the randoms
     //First set s_hat since it is involved in many of the limits, sets x = s_hat/s
     double QQ_Min = std::max(0., drellyan_in->res_1.QQ_Min);
@@ -345,6 +428,7 @@ double DYjet_ps(const double x[], drellyan_input* drellyan_in, drellyan_amplitud
 //   // std::cout << "here 5... " << std::endl;
    //UP TO HERE IS THE SETTING OF MOMENTA BY HAND SEP 20 - NEED TO UNCOMMENT BELOW 10 LINES TO RESET TO NORMAL
 
+*/
 
     //TCRIDGE COMMENT OUT THESE NEXT APPROX 10 LINES AS INPUT MOMENTA BY HAND - SEP20
      amp1.add_mom(k1);
@@ -363,6 +447,19 @@ double DYjet_ps(const double x[], drellyan_input* drellyan_in, drellyan_amplitud
  //
      resuPS_0.set(drellyan_in->res_1, q2, eta, qt2);
 
+    // The PS3 Jacobian
+    double costhetaqt = std::sqrt( (1 - (qt2/QT_kinmax)*(qt2/QT_kinmax)) );
+    double dx1dx2dcosthetaqt_dshatdqT2dy = std::abs(2*s_hat/(CM_energy*CM_energy*std::pow(s_hat-q2,2)*costhetaqt));
+    double Jac = 1/(512*std::pow(pi,5)*std::sqrt(q2)*std::sqrt(s_hat))*dx1dx2dcosthetaqt_dshatdqT2dy;
+
+    randsjacob *= Jac;
+    //finally multiply by |k| and |q1| which are the norms of the 3-momenta of the jet in the parton CM frame and that of either lepton in the Z frame, which are given by Kallen functions, and add a factor of 2 for fact I have chosen sign of costhetaqt
+    randsjacob *= 2*(s_hat-q2)/(2*std::sqrt(s_hat))*std::sqrt(q2)/2;
+
+    double ss_hat = s_hat; //load into ss_hat so can pass into xsection later to read correct x1 and x2 values for PDFs
+    double etaa_hat = eta_hat; //needed later to call the PDFs at the right x1 and x2 in xsection_nlojet
+ 
+
 
 
 // Final: insert the Jacobian factor for the full PS measure as a function of the randoms-related physical variables, that is:
@@ -375,12 +472,12 @@ double DYjet_ps(const double x[], drellyan_input* drellyan_in, drellyan_amplitud
     // double s_hat = q2 + std::exp(-eta)*MT*kjet_plus + qt2*(2. + std::exp(-eta)*MT/kjet_plus);
     //Commented out as s_hat now generated as one of MC variables
     // double s_hat = q2 + std::exp(-eta)*MT*kjet_plus + qt2*(2. + std::exp(eta)*MT/kjet_plus);
-    ss_hat = s_hat; //load into ss_hat so can pass into xsection later to read correct x1 and x2 values for PDFs
+    //ss_hat = s_hat; //load into ss_hat so can pass into xsection later to read correct x1 and x2 values for PDFs
     // std::cout << "set ss_hat to " << ss_hat << std::endl;
     // std::cout << "s_hat = " << s_hat << std::endl;
     // double eta_hat = 1./2.*std::log( (kjet_plus*kjet_plus + std::exp(eta)*MT*kjet_plus)/(q2 + std::exp(-eta)*MT*kjet_plus) );
     // double eta_hat = 1./2.*std::log( (kjet_plus*kjet_plus + std::exp(eta)*MT*kjet_plus)/(qt2 + std::exp(-eta)*MT*kjet_plus) );
-    etaa_hat = eta_hat; //needed later to call the PDFs at the right x1 and x2 in xsection_nlojet
+    //etaa_hat = eta_hat; //needed later to call the PDFs at the right x1 and x2 in xsection_nlojet
     // std::cout << "set etaa_hat to " << etaa_hat << std::endl;
     // std::cout << "eta_hat = " << eta_hat << std::endl;
     // double c_theta_qt = MT*std::sinh(eta - eta_hat)/std::sqrt(qt2 + MT*MT*std::pow(std::sinh(eta - eta_hat),2));
@@ -403,9 +500,9 @@ double DYjet_ps(const double x[], drellyan_input* drellyan_in, drellyan_amplitud
     // std::cout << "dx1dx2dcosthetaqt_dqT2dydkjetplus = " << dx1dx2dcosthetaqt_dqT2dydkjetplus << std::endl;
     // std::cout << "num = " << (std::exp(-eta)*(qt2*(kjet_plus*kjet_plus+std::exp(2*eta)*qt2+2*std::exp(eta)*kjet_plus*MT)*std::cosh(eta-eta_hat)-q2*(kjet_plus*kjet_plus-std::exp(2*eta)*qt2)*std::sinh(eta-eta_hat))) << " denom = " << (2*kjet_plus*kjet_plus*CM_energy*CM_energy*std::pow(qt2+std::pow(MT,2)*std::sinh(eta-eta_hat)*std::sinh(eta-eta_hat),1.5)) << std::endl;
     // double Jac = 1/(512*std::pow(pi,5)*std::sqrt(q2)*std::sqrt(s_hat)*dx1dx2dcosthetaqt_dqT2dydkjetplus);
-    double dx1dx2dcosthetaqt_dshatdqT2dy = std::abs(2*s_hat/(CM_energy*CM_energy*std::pow(s_hat-q2,2)*costhetaqt));
+//    double dx1dx2dcosthetaqt_dshatdqT2dy = std::abs(2*s_hat/(CM_energy*CM_energy*std::pow(s_hat-q2,2)*costhetaqt));
     // std::cout << "extra Jac piece from x1, x2, costhetaqt ->s_hat, qt2, y = " << dx1dx2dcosthetaqt_dshatdqT2dy << std::endl;
-    double Jac = 1/(512*std::pow(pi,5)*std::sqrt(q2)*std::sqrt(s_hat))*dx1dx2dcosthetaqt_dshatdqT2dy;
+//    double Jac = 1/(512*std::pow(pi,5)*std::sqrt(q2)*std::sqrt(s_hat))*dx1dx2dcosthetaqt_dshatdqT2dy;
     // std::cout << "extra total Jac = " << Jac << std::endl;
 
     // double Jac = (1+c_theta_qt)*(CM_energy*CM_energy)*(q2-s_hat)*(q2-s_hat)*(-q2+s_hat)*(q2+s_hat)/(16384*pow(pi,5)*pow(s_hat,4));
@@ -414,7 +511,7 @@ double DYjet_ps(const double x[], drellyan_input* drellyan_in, drellyan_amplitud
     // std::cout << "randsjacob = " << randsjacob << std::endl;
     // std::cout << "randsjacob Jac piece = " << Jac << std::endl;
     // std::cout << "Jac = " << Jac << std::endl;
-    randsjacob *= Jac;
+//    randsjacob *= Jac;
     //finally multiply by |k| and |q1| which are the norms of the 3-momenta of the jet in the parton CM frame and that of either lepton in the Z frame, which are given by Kallen functions, and add a factor of 2 for fact I have chosen sign of costhetaqt
     // std::cout << "randsjacob after Jac piece = " << randsjacob << std::endl;
     // std::cout << "mz = " << drellyan_in->mz << std::endl;
