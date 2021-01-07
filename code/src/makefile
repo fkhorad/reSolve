@@ -84,7 +84,7 @@ DIPH_FILES=diphoton_input.o diphoton_integrand.o diphoton_ps.o \
 	diphoton_cuts.o diphoton_hard.o
 DY_FILES=drellyan_input.o drellyan_integrand.o drellyan_cuts.o
 DY_RES_FILES=drellyan_res_ps.o drellyan_res_integrand.o drellyan_res_hard.o
-DY_REAL_FILES=DYjet_ps_new.o DYjet_integrand.o DYjet_hard.o DYjet_cuts.o
+DY_REAL_FILES=DYjet_ps.o DYjet_integrand.o DYjet_hard.o DYjet_cuts.o
 HISTO_FILES=histogrammer.o observables.o \
 	histogram.o event_reader.o events_to_histograms.o
 CT_FILES=ADPINT.o AP_LO.o CT_NLO.o Itilde.o

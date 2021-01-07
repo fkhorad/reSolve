@@ -1,0 +1,60 @@
+# Basic
+process: 2 !1=diphoton, 2=DY
+DYprocess: 5  1 = W+, 2 = W-, 3 = W+ or W-, 4 = Z only, 5 = gamma* + Z, 6 = Z +gamma* + Zp
+DYnarrowwidthapprox: 0 !so set q2 = mz
+resum_flag: 0
+order: 1
+CT_flag: 0
+pdf_setname: mstw2008nnlo
+lha_flag: 0
+CM_energy: 13000.
+verbosity: 1 !Amount of output text
+ih1: 1 ! hadron type for beam1 (1=proton  -1=antiproton)
+ih2: 1 ! hadron type for beam2 (1=proton  -1=antiproton)
+save_events: 1
+workdir: EW_benchmarking_finitepiece_NLO_short_nouserlimits/
+# Scales
+mu_R: 1. ! multiplies dynamic renormisation scale
+mu_S: 1. ! multiplies dynamic resummation scale - 2 used as naturally set to 1/2 of muR whereas now we want all scales at Q
+muR_flag: 1 ! Sets muR and muS to some multiple of Q (multiples set on previous two lines)
+mu_F: 1 ! multiplies dynamic factorisation scale
+muF_flag: 1 ! Sets muF to some multiple of Q (multiple set on previous line)
+# Integration
+maxeval: 5000 ! Approximate max number of integral iterations
+nstart: 1000 ! Number of integral iterations in first evaluation
+nincrease: 1000 ! Number of extra integral iterations in each further evaluation
+integrator_flag: 1 !1=default, 2=cuba
+statefile: grid_so_far.dat
+multi_machine: 0
+seed: 0
+# General Parameters
+gevm2topb: 389379660.
+# EW parameters - pole z and w masses and widths
+mw: 80.35797360987756
+ww: 2.0842989982782196
+mz: 91.15348061918276
+zw: 2.4942663787728243
+gf: 0.000011663787 (this is actually also the default used in reSolve anyway)
+# Resummation
+gqnp: 0.
+ggnp: 0.
+QQ_Min: 0
+QQ_Max: 200
+QQ_fix: 0
+QT_Min: 0.5
+QT_Max: 100.5
+qT_linear: 1
+eta_Min: 0
+eta_Max: 10
+eta_fix: 0
+# DrellYan cuts - none for now!
+crack1: 1.37 ! etacut crack1 general cut
+crack2: 1.37 ! etacut crack2 general cut
+pT1cut: 0.
+pT2cut: 0.
+eta1cut: 10.
+eta2cut: 10.
+# Histograms
+hist_only: 0
+#histo: qT 0 0.999 1.001
+histo: qT 0 .5 1.5 2.5 3.5 4.5 5.5 6.5 7.5 8.5 9.5 10.5 11.5 12.5 13.5 14.5 15.5 16.5 17.5 18.5 19.5 20.5 21.5 22.5 23.5 24.5 25.5 26.5 27.5 28.5 29.5 30.5 31.5 32.5 33.5 34.5 35.5 36.5 37.5 38.5 39.5 40.5 42.5 47.5 52.5 57.5 62.5 67.5 72.5 77.5 82.5 87.5 92.5 97.5 102.5
